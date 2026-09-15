@@ -4,10 +4,10 @@
      frozen face-on at the centre for the rest of the page;
    - titles: SplitText words in masks (lib/split.js), `.is-inview` from
      Locomotive's observer drives the CSS reveal-words contract;
-   - story: the paragraph flows around the coin — lib/flow-around.js lays
-     the words out itself (CSS cannot put a hole mid-line), using the coin
-     silhouette from coin-shape.json (traced from frame 119) at the coin's
-     current position, re-run on every scroll frame; plain lines before and after.
+   - story: the paragraph parts around the coin — lib/flow-around.js wraps it
+     once and, every scroll frame, slides each line's two halves apart just
+     enough to clear the coin silhouette (coin-shape.json, traced from frame
+     119); no re-wrapping, nothing to animate — the motion is the scroll.
    ?cdn=1 → frames from jsDelivr instead of ./frames/ (the CDN check). */
 import { gsap, ScrollTrigger, reduced } from '../lib/gsap.js';
 import { initScroll, onScroll } from '../lib/scroll.js';
@@ -119,7 +119,7 @@ function updateFlow() {
 fetch('coin-shape.json').then((r) => r.json()).then(async (shape) => {
   await document.fonts.ready;
   const gap = parseFloat(getComputedStyle(text).fontSize) * 0.4;   /* the .4em breathing room of the reference */
-  flow = createFlow({ el: text, points: shape.points, centre: shape.centre, margin: gap, animate: !reduced });
+  flow = createFlow({ el: text, points: shape.points, centre: shape.centre, margin: gap });
   flow.measure();
   updateFlow();
   ScrollTrigger.refresh();

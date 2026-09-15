@@ -64,9 +64,6 @@
   --lh-display-serif: .95;
   --w-display-serif: 500;
 
-  /* Emil's strong ease-out — the flow's glide / materialise (lib/flow-around.js uses the same curve) */
-  --ease-out-strong: cubic-bezier(.23, 1, .32, 1);
-
   /* Undr Drift reveal tokens, verbatim */
   --ease-out-expo: cubic-bezier(.19, 1, .22, 1);
   --dur-word: 1.6s;
@@ -196,10 +193,10 @@ body {
   letter-spacing: -.01em;
   text-align: center;
 }
-/* words placed by lib/flow-around.js — positions are scroll-linked, so they
-   are written directly with no transition: the user controls the scroll, and
-   any easing here would make words trail the coin and overlap. The liquid
-   feel is the per-frame re-wrap itself, smoothed by Lenis. */
+/* words placed by lib/flow-around.js — every position is a continuous
+   function of the scroll, written directly, no transitions: the user controls
+   the scroll and nothing here may trail it. The lines near the coin spill
+   into the column's margins while they are parted. */
 .flow { position: relative; }
 .flow__w {
   position: absolute;
