@@ -139,7 +139,7 @@ body {
    mask, 75ms apart, once the title is in view. Everything animated lives
    INSIDE .line — the line itself and .title never get transform/opacity,
    so the z-index sandwich stays intact. */
-.line:where(html.js *):not(.is-split) { opacity: 0; }   /* no flash of unsplit text */
+.title:where(html.js *):not(:has(.word)) .line { opacity: 0; }   /* no flash before SplitText runs (opacity on .line is safe) */
 .word-mask {
   display: inline-block;
   padding-right: var(--split-mask-pad);
@@ -167,10 +167,48 @@ body {
   place-items: center;
 }
 #coin {
-  width: min(70vh, 70vw);
-  height: min(70vh, 70vw);
+  width: min(56vh, 56vw);
+  height: min(56vh, 56vw);
+  /* scale is scrubbed by scroll in main.js (GSAP writes the transform): 1 → .6 → .5 */
+  transform-origin: center;
 }
 
-.progress, .note { text-transform: uppercase; letter-spacing: .12em; opacity: .5; }
+.progress { text-transform: uppercase; letter-spacing: .12em; opacity: .5; }
 .progress { position: absolute; left: 0; right: 0; bottom: 24px; text-align: center; }
 .progress.done { display: none; }
+
+/* ── the story: flows around the fixed coin ──
+   .story and .story__col stay stacking-context-free (no transform/opacity):
+   the coin (z 5) paints over the text (z auto) like a real object on top. */
+.story { padding: 0 4vw 100vh; }   /* the tail must clear the coin (the wrap makes the paragraph ~25% taller) */
+.story__col {
+  display: flow-root;          /* contains the floats */
+  max-width: 56rem;
+  margin-inline: auto;
+}
+.story__text {
+  font-family: var(--font-display);
+  font-weight: var(--w-text);
+  line-height: 1.05;
+  letter-spacing: -.01em;
+  text-align: center;
+}
+/* words placed by lib/flow-around.js — positions are scroll-linked, so they
+   are written directly with no transition: the user controls the scroll, and
+   any easing here would make words trail the coin and overlap. The liquid
+   feel is the per-frame re-wrap itself, smoothed by Lenis. */
+.flow { position: relative; }
+.flow__w {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+}
+/* copperplate flourishes: scripts read small, so 1.15em; line-height tight so the line box does not grow */
+.script {
+  font-family: 'Pinyon Script', 'Snell Roundhand', cursive;
+  font-weight: 400;
+  font-size: 1.15em;
+  line-height: .9;
+  letter-spacing: 0;
+}

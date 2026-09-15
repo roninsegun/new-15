@@ -4,12 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Сэндвич — тест</title>
-  <link rel="preload" href="../fonts/newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="../fonts/inter-tight-400-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="../fonts/inter-tight.css">
   <link rel="stylesheet" href="../fonts/newsreader.css">
+  <link rel="stylesheet" href="../fonts/pinyon-script.css">
   <link rel="stylesheet" href="style.css">
   <script>document.documentElement.classList.add('js')</script>
+  <!-- GSAP 3.13 + Locomotive Scroll 5 (Lenis inside) — the new-14 stack, self-hosted -->
+  <script defer src="../vendor/gsap.min.js"></script>
+  <script defer src="../vendor/ScrollTrigger.min.js"></script>
+  <script defer src="../vendor/SplitText.min.js"></script>
+  <script defer src="../vendor/CustomEase.min.js"></script>
+  <script defer src="../vendor/locomotive-scroll.min.js"></script>
 </head>
 <body>
   <!-- fixed layer with the coin: z-index 5, between the text lines (4 / 6) -->
@@ -19,21 +24,27 @@
   </div>
 
   <section class="screen">
-    <h1 class="title t-display-serif">
+    <h1 class="title t-display-serif" data-split="words" data-split-mask="words" data-scroll data-scroll-offset="30%" data-scroll-repeat>
       <span class="line front">Struck by hand</span>
       <span class="line back">in worn copper</span>
     </h1>
   </section>
 
   <section class="screen">
-    <h2 class="title t-display-serif">
+    <h2 class="title t-display-serif" data-split="words" data-split-mask="words" data-scroll data-scroll-offset="30%" data-scroll-repeat>
       <span class="line back">Turned by time</span>
       <span class="line front">still turning</span>
     </h2>
   </section>
 
-  <section class="screen">
-    <p class="note t-meta">конец теста · скролл вверх</p>
+  <!-- the story flows around the fixed coin: lib/flow-around.js lays the words
+       out itself, splitting every line into the segments left/right of the coin -->
+  <section class="story" data-story>
+    <div class="story__col" data-story-col>
+      <p class="story__text t-statement" data-story-text>
+        This coin was struck by hand in the workshop of <span class="script">Alexandros of Miletus</span>, somewhere in the fourth century before our era, from a blank of copper that had already lived one life as a temple nail. The lion on its face was cut into the die by an apprentice whose name nobody wrote down, and the strike landed a little off centre, as they often did. It passed through the purse of <span class="script">Theron the ferryman</span>, paid for a night's lodging in <span class="script">Halikarnassos</span>, and was lost in the mud of a riverbank for eleven hundred years. A farmer's daughter, <span class="script">Eleni Vassilaki</span>, found it in the spring of <span class="script">1911</span> and kept it in a matchbox under her pillow. The high points wore smooth against her thumb. Every scratch on it is a hand it has known, and every hand is a story that nobody finished telling.
+      </p>
+    </div>
   </section>
 
   <script type="module" src="main.js"></script>
