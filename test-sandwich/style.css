@@ -1,7 +1,15 @@
 /* Sandwich test — one rule matters: the fixed .stage (z 5) and the title
    lines (.front z 6 / .back z 4) share the ROOT stacking context. Nothing
    between them may carry transform / opacity / filter / will-change. */
-:root { --bg: #000000; --ink: #ffffff; }
+:root {
+  --bg: #000000; --ink: #ffffff;
+  /* Undr Drift reveal tokens (new-12 style.css), verbatim */
+  --ease-out-expo: cubic-bezier(.19, 1, .22, 1);
+  --dur-word: 1.6s;
+  --step-word: 75ms;
+  --split-mask-pad: .08em;
+  --split-mask-bleed-y: .3em;
+}
 
 * { box-sizing: border-box; margin: 0; }
 html, body { background: var(--bg); }
@@ -29,6 +37,29 @@ body {
 .line { display: block; position: relative; }
 .line.front { z-index: 6; }   /* over the coin */
 .line.back  { z-index: 4; }   /* behind the coin */
+
+/* Undr Drift "reveal-words" contract (new-12, A3): words slide up out of a
+   mask, 75ms apart, once the title is in view. Everything animated lives
+   INSIDE .line — the line itself and .title never get transform/opacity,
+   so the z-index sandwich stays intact. */
+.line:where(html.js *):not(.is-split) { opacity: 0; }   /* no flash of unsplit text */
+.word-mask {
+  display: inline-block;
+  padding-right: var(--split-mask-pad);
+  margin-right: calc(var(--split-mask-pad) * -1);
+  clip-path: inset(calc(var(--split-mask-bleed-y) * -1) 0 calc(var(--split-mask-bleed-y) * -1) 0);
+}
+.word {
+  display: inline-block;
+  transform: translateY(130%);
+  transition: transform var(--dur-word) var(--ease-out-expo);
+  transition-delay: calc(var(--step-word) * var(--word, 0));
+}
+.title.is-inview .word { transform: translateY(0%); }
+.title:not(.is-inview) .word { transition-duration: 0s; transition-delay: 0s; }  /* instant reset out of view → replays */
+@media (prefers-reduced-motion: reduce) {
+  .word { transition: none; transform: none; }
+}
 
 .stage {
   position: fixed;

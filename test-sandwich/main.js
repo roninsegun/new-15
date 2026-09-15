@@ -67,5 +67,38 @@ addEventListener('scroll', schedule, { passive: true });
 addEventListener('resize', resize);
 resize();
 
+/* Undr Drift title reveal (new-12 reveal-words): each word wrapped in a
+   clip-path mask, indexed 1-based across both lines of a title (--word is the
+   stagger, computed in CSS). The observer toggles .is-inview on the .title —
+   a class only, never a style, so the sandwich is untouched. */
+function splitWords(line, start) {
+  const words = line.textContent.trim().split(/\s+/);
+  line.textContent = '';
+  words.forEach((text, i) => {
+    const mask = document.createElement('span');
+    mask.className = 'word-mask';
+    const word = document.createElement('span');
+    word.className = 'word';
+    word.textContent = text;
+    word.style.setProperty('--word', start + i);
+    mask.appendChild(word);
+    line.appendChild(mask);
+    if (i < words.length - 1) line.appendChild(document.createTextNode(' '));
+  });
+  line.classList.add('is-split');
+  return start + words.length;
+}
+
+const titles = document.querySelectorAll('.title');
+titles.forEach((title) => {
+  let index = 1;
+  title.querySelectorAll('.line').forEach((line) => { index = splitWords(line, index); });
+});
+/* rootMargin -30% ≈ Locomotive's data-scroll-offset="30%" on the reference */
+const inview = new IntersectionObserver((entries) => {
+  entries.forEach((e) => e.target.classList.toggle('is-inview', e.isIntersecting));
+}, { rootMargin: '0px 0px -30% 0px' });
+titles.forEach((t) => inview.observe(t));
+
 /* dev handle */
 window.__test = { frames, get loaded() { return loaded; }, get current() { return current; }, frameIndex, base: BASE };
