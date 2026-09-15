@@ -1,7 +1,7 @@
 /* Sandwich test — one rule matters: the fixed .stage (z 5) and the title
    lines (.front z 6 / .back z 4) share the ROOT stacking context. Nothing
    between them may carry transform / opacity / filter / will-change. */
-:root { --bg: #f3f0e9; --ink: #151412; }
+:root { --bg: #000000; --ink: #ffffff; }
 
 * { box-sizing: border-box; margin: 0; }
 html, body { background: var(--bg); }
