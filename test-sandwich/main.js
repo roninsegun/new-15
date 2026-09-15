@@ -94,11 +94,13 @@ titles.forEach((title) => {
   let index = 1;
   title.querySelectorAll('.line').forEach((line) => { index = splitWords(line, index); });
 });
-/* rootMargin -30% ≈ Locomotive's data-scroll-offset="30%" on the reference */
+/* rootMargin -30% ≈ Locomotive's data-scroll-offset="30%" on the reference.
+   Observing starts once the fonts are in, so the first reveal plays in
+   Newsreader rather than in the fallback face. */
 const inview = new IntersectionObserver((entries) => {
   entries.forEach((e) => e.target.classList.toggle('is-inview', e.isIntersecting));
 }, { rootMargin: '0px 0px -30% 0px' });
-titles.forEach((t) => inview.observe(t));
+document.fonts.ready.then(() => titles.forEach((t) => inview.observe(t)));
 
 /* dev handle */
 window.__test = { frames, get loaded() { return loaded; }, get current() { return current; }, frameIndex, base: BASE };

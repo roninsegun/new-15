@@ -1,22 +1,126 @@
 /* Sandwich test — one rule matters: the fixed .stage (z 5) and the title
    lines (.front z 6 / .back z 4) share the ROOT stacking context. Nothing
-   between them may carry transform / opacity / filter / will-change. */
+   between them may carry transform / opacity / filter / will-change.
+   Type system = Undr Drift (new-12 style.css) verbatim: fluid root, the
+   --fs / --lh / --ls scale, Inter Tight for text + UI. Display titles wear
+   Newsreader (the Burberry-like serif) on the same scale. */
+
+/* Inter Tight metric-matched fallback (new-12): no reflow when the font lands */
+@font-face {
+  font-family: 'Inter Tight Fallback';
+  src: local('Arial');
+  ascent-override: 96.88%;
+  descent-override: 24.15%;
+  line-gap-override: 0%;
+  size-adjust: 100%;
+}
+
 :root {
   --bg: #000000; --ink: #ffffff;
-  /* Undr Drift reveal tokens (new-12 style.css), verbatim */
+
+  --font-text: 'Inter Tight', 'Inter Tight Fallback', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Newsreader', 'Times New Roman', serif;
+
+  /* ── type scale · rem on a fluid root (15px → 18px → 22px)
+     resolved px:                       @390   @768   @1440   @1920 */
+  --fs-display:    3rem;             /*  45     54    —       —       (md: 7rem → 122.9 / 154) */
+  --fs-statement:  1.875rem;         /*  28     34    —       —       (md: 3rem  →  52.7 / 66) */
+  --fs-sublead:    1.5rem;           /*  22.5   27    —       —       (md: 1.875rem → 32.9 / 41) */
+  --fs-h3:         1.25rem;          /*  19     22.5  —       —       (md: 1.875rem → 32.9 / 41) */
+  --fs-body-lg:    1.125rem;         /*  17     20    19.7    24.75 */
+  --fs-body:       1.0625rem;        /*  16     19    18.65   23.4  */
+  --fs-ui:         1rem;             /*  15     18    17.55   22    */
+  --fs-caption:    .875rem;          /*  13     16    15.4    19.25 */
+  --fs-meta:       .75rem;           /*  11     13.5  13.2    16.5  */
+
+  --lh-display:    1;
+  --lh-display-tight: .85;
+  --lh-statement:  1;
+  --lh-sublead:    1;
+  --lh-h3:         1.05;
+  --lh-body-lg:    1.1;
+  --lh-body:       1.05;
+  --lh-body-loose: 1.15;
+  --lh-ui:         1.5;
+  --lh-caption:    1.43;
+  --lh-meta:       1.33;
+
+  --ls-display:    -.05em;
+  --ls-display-tight: -.035em;
+  --ls-statement:  -.04em;
+  --ls-quote:      -.025em;
+  --ls-sublead:    -.01em;
+  --ls-h3:         -.04em;
+  --ls-body-lg:    -.01em;
+  --ls-body:       -.02em;
+  --ls-ui:         -.001em;
+  --ls-note:       -.08em;
+
+  --w-text: 400;
+  --w-ui:   500;
+
+  /* the serif at display size: the grotesk's −.05em is too tight for it */
+  --ls-display-serif: -.02em;
+  --lh-display-serif: .95;
+  --w-display-serif: 500;
+
+  /* Undr Drift reveal tokens, verbatim */
   --ease-out-expo: cubic-bezier(.19, 1, .22, 1);
   --dur-word: 1.6s;
   --step-word: 75ms;
   --split-mask-pad: .08em;
   --split-mask-bleed-y: .3em;
 }
+@media (min-width: 48rem) {
+  :root {
+    --fs-display:   7rem;
+    --fs-statement: 3rem;
+    --fs-sublead:   1.875rem;
+    --fs-h3:        1.875rem;
+  }
+}
+
+/* fluid root — three segments, the reference's clamp() chain */
+html { font-size: 15px; }
+@media (min-width: 640px)  { html { font-size: clamp(15px, 12.9574px + .3191vw, 18px); } }
+@media (min-width: 1580px) { html { font-size: clamp(18px, 1.1765vw - .5882px, 22px); } }
 
 * { box-sizing: border-box; margin: 0; }
 html, body { background: var(--bg); }
-body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color: var(--ink);
+html {
+  -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body {
+  font-family: var(--font-text);
+  font-weight: var(--w-text);
+  color: var(--ink);
+}
+
+/* ── type utilities (new-12) ── */
+.t-display   { font-size: var(--fs-display);   line-height: var(--lh-display);   letter-spacing: var(--ls-display);   font-weight: var(--w-text); }
+.t-display-tight { font-size: var(--fs-display); line-height: var(--lh-display); letter-spacing: var(--ls-display-tight); font-weight: var(--w-text); }
+.t-statement { font-size: var(--fs-statement); line-height: var(--lh-statement); letter-spacing: var(--ls-statement); font-weight: var(--w-text); }
+.t-quote     { font-size: var(--fs-statement); line-height: var(--lh-statement); letter-spacing: var(--ls-quote);     font-weight: var(--w-text); }
+.t-sublead   { font-size: var(--fs-sublead);   line-height: var(--lh-sublead);   letter-spacing: var(--ls-sublead);   font-weight: var(--w-text); }
+.t-h3        { font-size: var(--fs-h3);        line-height: var(--lh-h3);        letter-spacing: var(--ls-h3);        font-weight: var(--w-ui); }
+.t-body-lg   { font-size: var(--fs-body-lg);   line-height: var(--lh-body-lg);   letter-spacing: var(--ls-body-lg);   font-weight: var(--w-text); }
+.t-body      { font-size: var(--fs-body);      line-height: var(--lh-body);      letter-spacing: var(--ls-body);      font-weight: var(--w-text); }
+.t-body-loose{ font-size: var(--fs-body);      line-height: var(--lh-body-loose);letter-spacing: 0;                   font-weight: var(--w-text); }
+.t-ui        { font-size: var(--fs-ui);        line-height: var(--lh-ui);        letter-spacing: var(--ls-ui);        font-weight: var(--w-ui); }
+.t-caption   { font-size: var(--fs-caption);   line-height: var(--lh-caption);   letter-spacing: 0;                   font-weight: var(--w-ui); }
+.t-meta      { font-size: var(--fs-meta);      line-height: var(--lh-meta);      letter-spacing: 0;                   font-weight: var(--w-text); }
+
+/* display serif — the same scale, the Burberry-like face */
+.t-display-serif {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  font-weight: var(--w-display-serif);
+  font-optical-sizing: auto;
+  font-variation-settings: 'opsz' 72;
+  line-height: var(--lh-display-serif);
+  letter-spacing: var(--ls-display-serif);
 }
 
 .screen {
@@ -26,14 +130,7 @@ body {
   padding: 0 4vw;
 }
 
-.title {
-  font-weight: 700;
-  font-size: clamp(44px, 9.5vw, 150px);
-  line-height: 0.92;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
-  text-align: center;
-}
+.title { text-align: center; }
 .line { display: block; position: relative; }
 .line.front { z-index: 6; }   /* over the coin */
 .line.back  { z-index: 4; }   /* behind the coin */
@@ -74,11 +171,6 @@ body {
   height: min(70vh, 70vw);
 }
 
-.progress, .note {
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  opacity: 0.5;
-}
+.progress, .note { text-transform: uppercase; letter-spacing: .12em; opacity: .5; }
 .progress { position: absolute; left: 0; right: 0; bottom: 24px; text-align: center; }
 .progress.done { display: none; }
