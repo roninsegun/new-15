@@ -119,7 +119,7 @@ function updateFlow() {
 fetch('coin-shape.json').then((r) => r.json()).then(async (shape) => {
   await document.fonts.ready;
   const gap = parseFloat(getComputedStyle(text).fontSize) * 0.4;   /* the .4em breathing room of the reference */
-  flow = createFlow({ el: text, points: shape.points, centre: shape.centre, margin: gap });
+  flow = createFlow({ el: text, points: shape.points, centre: shape.centre, margin: gap, animate: !reduced });
   flow.measure();
   updateFlow();
   ScrollTrigger.refresh();

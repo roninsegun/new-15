@@ -64,6 +64,9 @@
   --lh-display-serif: .95;
   --w-display-serif: 500;
 
+  /* Emil's strong ease-out — the flow's glide / materialise (lib/flow-around.js uses the same curve) */
+  --ease-out-strong: cubic-bezier(.23, 1, .32, 1);
+
   /* Undr Drift reveal tokens, verbatim */
   --ease-out-expo: cubic-bezier(.19, 1, .22, 1);
   --dur-word: 1.6s;
