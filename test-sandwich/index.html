@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Сэндвич — тест</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- fixed layer with the coin: z-index 5, between the text lines (4 / 6) -->
+  <div class="stage" aria-hidden="true">
+    <canvas id="coin"></canvas>
+    <div class="progress" id="progress">0 / 120</div>
+  </div>
+
+  <section class="screen">
+    <h1 class="title">
+      <span class="line front">Struck by hand</span>
+      <span class="line back">in worn copper</span>
+    </h1>
+  </section>
+
+  <section class="screen">
+    <h2 class="title">
+      <span class="line back">Turned by time</span>
+      <span class="line front">still turning</span>
+    </h2>
+  </section>
+
+  <section class="screen">
+    <p class="note">конец теста · скролл вверх</p>
+  </section>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
