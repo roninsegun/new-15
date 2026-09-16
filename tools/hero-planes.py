@@ -1,6 +1,6 @@
 """Hero planes: assets/src/hero/*.png (lossless cut-outs of the master) →
 assets/img/hero/*.webp, darkened per depth so the coin stays the brightest
-thing in the scene (Dmitriy: back −30 %, the boat −15 %, the front planes −10 %).
+thing in the scene (Dmitriy: back −55 %, the boat −35 %, the front planes −25 % — "значительно темнее", the order matters).
 Alpha is untouched. Re-run after changing DARKEN."""
 import os
 from PIL import Image, ImageEnhance
@@ -8,7 +8,7 @@ from PIL import Image, ImageEnhance
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'assets', 'src', 'hero')
 OUT = os.path.join(ROOT, 'assets', 'img', 'hero')
-DARKEN = {'back': 0.30, 'mid': 0.15, 'front-l': 0.10, 'front-r': 0.10}
+DARKEN = {'back': 0.55, 'mid': 0.35, 'front-l': 0.25, 'front-r': 0.25}
 
 for name, k in DARKEN.items():
     im = Image.open(os.path.join(SRC, f'{name}.png')).convert('RGBA')
