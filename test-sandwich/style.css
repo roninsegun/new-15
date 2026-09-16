@@ -166,10 +166,6 @@ body {
   align-items: center;
   padding: 28px 4vw;
   pointer-events: auto;
-  /* a real bar: everything scrolls UNDER it — dimmed and blurred, like the reference's strip */
-  background: rgba(0, 0, 0, .72);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
 }
 .header__nav { display: flex; gap: 2.5rem; text-transform: uppercase; letter-spacing: .08em; }
 .header__nav a { color: var(--ink); text-decoration: none; opacity: .85; }
