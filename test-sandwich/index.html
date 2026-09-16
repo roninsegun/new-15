@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Сэндвич — тест</title>
+  <title>OBOL — the coin that came back</title>
   <link rel="stylesheet" href="../fonts/inter-tight.css">
   <link rel="stylesheet" href="../fonts/newsreader.css">
   <link rel="stylesheet" href="../fonts/pinyon-script.css">
@@ -37,16 +37,27 @@
     </div>
   </header>
 
-  <!-- fixed layer with the coin: z-index 5, between the text lines (4 / 6) -->
+  <!-- the hero painting ("The refusal", assets/img/hero-master.png) split into
+       planes around the coin. Fixed siblings of .stage — never ancestors of
+       .line — so the sandwich is untouched; GSAP moves the planes themselves.
+       z: back 1 · mid 3 · title back-line 4 · coin 5 · title front-line 6 · front 7 -->
+  <div class="plane plane--back" aria-hidden="true"><img src="../assets/img/hero/back.webp" alt="" fetchpriority="high"></div>
+  <div class="plane plane--mid" aria-hidden="true"><img src="../assets/img/hero/mid.webp" alt=""></div>
+  <div class="plane plane--front plane--front-l" aria-hidden="true"><img src="../assets/img/hero/front-l.webp" alt=""></div>
+  <div class="plane plane--front plane--front-r" aria-hidden="true"><img src="../assets/img/hero/front-r.webp" alt=""></div>
+
+  <!-- fixed layer with the coin: z-index 5, between the text lines (4 / 6).
+       The glow under the canvas is the painting's light; it goes with the scene. -->
   <div class="stage" aria-hidden="true">
+    <div class="stage__glow" id="glow"></div>
     <canvas id="coin"></canvas>
     <div class="progress t-meta" id="progress">0 / 120</div>
   </div>
 
   <section class="screen">
     <h1 class="title t-display-serif" data-split="words" data-split-mask="words" data-scroll data-scroll-offset="30%" data-scroll-repeat>
-      <span class="line front">Struck by hand</span>
-      <span class="line back">in worn copper</span>
+      <span class="line front">Spent once.</span>
+      <span class="line back">Came back.</span>
     </h1>
   </section>
 

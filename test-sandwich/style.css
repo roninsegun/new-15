@@ -180,6 +180,18 @@ body {
   .header__logo img { height: 56px; }
 }
 
+/* ── the hero painting: four fixed planes around the coin ──
+   Leaves of the root stacking context (siblings of .stage, never ancestors of
+   .line), so transform / opacity on them is safe. All four share one frame
+   (2688×1520) and one cover-fit, so they register against each other exactly;
+   the back plane is overscanned for its drift. */
+.plane { position: fixed; inset: 0; pointer-events: none; will-change: transform, opacity; }   /* no overflow clip: the clip would ride along with the drift and expose the body */
+.plane img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.plane--back  { z-index: 1; }
+.plane--back img { transform: scale(1.2); }
+.plane--mid   { z-index: 3; }
+.plane--front { z-index: 7; }
+
 .stage {
   position: fixed;
   inset: 0;
@@ -188,11 +200,20 @@ body {
   display: grid;
   place-items: center;
 }
+.stage__glow, #coin { grid-area: 1 / 1; }   /* one cell: the glow sits under the coin */
 #coin {
   width: min(56vh, 56vw);
   height: min(56vh, 56vw);
   /* scale is scrubbed by scroll in main.js (GSAP writes the transform): 1 → .6 → .5 */
   transform-origin: center;
+}
+/* the painting's light under the coin: 1.6× the coin box, linear falloff to
+   its edge; GSAP scales it with the coin and fades it out with the scene */
+.stage__glow {
+  width: min(89.6vh, 89.6vw);
+  height: min(89.6vh, 89.6vw);
+  border-radius: 50%;
+  background: radial-gradient(circle closest-side, rgba(224, 136, 74, .55), rgba(224, 136, 74, 0));
 }
 
 .progress { text-transform: uppercase; letter-spacing: .12em; opacity: .5; }

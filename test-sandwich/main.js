@@ -1,7 +1,12 @@
 /* Sandwich test, scene 3 — the new-14 stack (GSAP 3.13 + Locomotive 5/Lenis).
    - coin: 120 alpha-WebP frames on the fixed canvas, one scrubbed timeline
      (frames 0→119 over 0→150vh; scale 1→.6 by 100vh, →.5 by 150vh), then
-     frozen face-on at the centre for the rest of the page;
+     frozen face-on at the centre for the rest of the page; every frame is
+     graded to the painting's copper on the canvas;
+   - hero painting: four fixed planes around the coin ride the same scrub over
+     0→100vh — the scene lets go of the coin (docs/concept.md storyboard): the
+     shore figures leave faster than the scroll, the boat recedes and
+     dissolves, the far bank drifts and goes black, the glow goes with it;
    - titles: SplitText words in masks (lib/split.js), `.is-inview` from
      Locomotive's observer drives the CSS reveal-words contract;
    - story: the paragraph parts around the coin — lib/flow-around.js wraps it
@@ -10,7 +15,7 @@
      119); no re-wrapping, nothing to animate — the motion is the scroll.
    ?cdn=1 → frames from jsDelivr instead of ./frames/ (the CDN check). */
 import { gsap, ScrollTrigger, reduced } from '../lib/gsap.js';
-import { initScroll, onScroll } from '../lib/scroll.js';
+import { initScroll, onScroll, getScroll } from '../lib/scroll.js';
 import { initSplit } from '../lib/split.js';
 import { createFlow } from '../lib/flow-around.js';
 
@@ -24,10 +29,13 @@ const BASE = useCdn ? CDN : LOCAL;
 const TURN_END = 1.5;     // frames 0→119 finish here
 const SCALE_MID = 0.6;    // at 1vh
 const SCALE_END = 0.5;    // at 1.5vh, then frozen
+const TINT = '#ff9c55';   // the painting's copper (224,136,74) lifted ×1.15 — multiplied over every frame
 
 const canvas = document.getElementById('coin');
 const ctx = canvas.getContext('2d');
 const progress = document.getElementById('progress');
+const glow = document.getElementById('glow');
+const [back, mid, frontL, frontR] = ['back', 'mid', 'front-l', 'front-r'].map((n) => document.querySelector(`.plane--${n}`));
 const frames = new Array(N);
 let loaded = 0;
 let current = -1;
@@ -40,8 +48,17 @@ function drawFrame(i) {
   const img = frames[i];
   if (!img || !img.complete || !img.naturalWidth) return; /* not in yet — keep the last frame */
   current = i;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const { width, height } = canvas;
+  ctx.clearRect(0, 0, width, height);
+  ctx.drawImage(img, 0, 0, width, height);
+  /* copper grade, clipped to the coin: multiply the tint over the frame (the
+     rect covers the transparent area too), then keep only the frame's alpha */
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = TINT;
+  ctx.fillRect(0, 0, width, height);
+  ctx.globalCompositeOperation = 'destination-in';
+  ctx.drawImage(img, 0, 0, width, height);
+  ctx.globalCompositeOperation = 'source-over';
 }
 
 function sizeCanvas() {
@@ -71,6 +88,7 @@ for (let i = 0; i < N; i += 1) load(i);
 /* ── scroll + coin timeline ── */
 const state = { frame: 0 };
 const targetFrame = () => Math.round(state.frame);
+const vh = (k) => () => innerHeight * k;   /* function values: re-read on every ScrollTrigger refresh */
 
 initScroll();
 initSplit();
@@ -87,7 +105,12 @@ document.fonts.ready.then(() => requestAnimationFrame(() => requestAnimationFram
 
 if (reduced) {
   state.frame = 0;
-  gsap.set(canvas, { scale: SCALE_END });
+  gsap.set([canvas, glow], { scale: SCALE_END });
+  /* no motion: the painting simply fades out over the first half screen */
+  gsap.fromTo([back, mid, frontL, frontR, glow], { opacity: 1 }, {
+    opacity: 0, ease: 'none',
+    scrollTrigger: { start: 0, end: () => innerHeight * 0.5, scrub: true, invalidateOnRefresh: true },
+  });
 } else {
   const tl = gsap.timeline({
     defaults: { ease: 'none' },
@@ -98,7 +121,19 @@ if (reduced) {
      its start value from wherever the scroll happens to be at refresh time */
   tl.fromTo(state, { frame: 0 }, { frame: N - 1, duration: TURN_END }, 0)
     .fromTo(canvas, { scale: 1 }, { scale: SCALE_MID, duration: 1 }, 0)
-    .fromTo(canvas, { scale: SCALE_MID }, { scale: SCALE_END, duration: TURN_END - 1, immediateRender: false }, 1);
+    .fromTo(canvas, { scale: SCALE_MID }, { scale: SCALE_END, duration: TURN_END - 1, immediateRender: false }, 1)
+    /* the painting, 0→1vh — rates are fractions of the scroll distance:
+       front planes leave at 1× sideways + 1× down (1.4× along the diagonal),
+       the boat recedes at .3× and shrinks, the far bank drifts at .1×;
+       mid + back dissolve over .5→.9, the glow over .6→1 */
+    .fromTo(back, { y: 0 }, { y: vh(-0.1), duration: 1 }, 0)
+    .fromTo(back, { opacity: 1 }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.5)
+    .fromTo(mid, { y: 0, scale: 1 }, { y: vh(-0.3), scale: 0.94, duration: 1 }, 0)
+    .fromTo(mid, { opacity: 1 }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.5)
+    .fromTo(frontL, { x: 0, y: 0 }, { x: vh(-1), y: vh(1), duration: 1 }, 0)
+    .fromTo(frontR, { x: 0, y: 0 }, { x: vh(1), y: vh(1), duration: 1 }, 0)
+    .fromTo(glow, { scale: 1 }, { scale: SCALE_MID, duration: 1 }, 0)
+    .fromTo(glow, { opacity: 1 }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.6);
 }
 
 /* ── the story flows around the coin (lib/flow-around.js) ── */
@@ -140,5 +175,7 @@ window.__test = {
   get loaded() { return loaded; },
   get current() { return current; },
   get scale() { return gsap.getProperty(canvas, 'scale'); },
+  planes: { back, mid, frontL, frontR }, glow,
+  get scroll() { return getScroll(); },   /* Lenis owns the scroll: drive it through here, not window.scrollTo */
   base: BASE,
 };
