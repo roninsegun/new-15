@@ -158,6 +158,28 @@ body {
   .word { transition: none; transform: none; }
 }
 
+/* ── header (pattern: new-14 .header) ── */
+.header { position: fixed; inset-inline: 0; top: 0; z-index: 20; pointer-events: none; }
+.header__bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 28px 4vw;
+  pointer-events: auto;
+}
+.header__nav { display: flex; gap: 2.5rem; text-transform: uppercase; letter-spacing: .08em; }
+.header__nav a { color: var(--ink); text-decoration: none; opacity: .85; }
+.header__nav a:hover { opacity: 1; }
+.header__nav--left  { justify-self: start; }
+.header__nav--right { justify-self: end; }
+.header__logo { justify-self: center; display: inline-flex; }
+.header__logo img { height: 44px; width: auto; display: block; }
+@media (max-width: 47.99rem) {
+  .header__bar { padding: 20px 5vw; }
+  .header__nav { gap: 1.25rem; }
+  .header__logo img { height: 36px; }
+}
+
 .stage {
   position: fixed;
   inset: 0;

@@ -17,6 +17,26 @@
   <script defer src="../vendor/locomotive-scroll.min.js"></script>
 </head>
 <body>
+  <!-- header: fixed, no JS, no background (the page is black throughout).
+       pointer-events none on the shell / auto on the bar, as in new-14, so it
+       never blocks the scroll. z 20 sits above the sandwich but is not an
+       ancestor of the title lines, so the sandwich is untouched. -->
+  <header class="header">
+    <div class="header__bar">
+      <nav class="header__nav header__nav--left t-ui" aria-label="Primary">
+        <a href="#">About</a>
+        <a href="#">Story</a>
+      </nav>
+      <a class="header__logo" href="#" aria-label="Home">
+        <img src="../assets/img/logo-lion.png" alt="">
+      </a>
+      <nav class="header__nav header__nav--right t-ui" aria-label="Secondary">
+        <a href="#">Journal</a>
+        <a href="#">Contact</a>
+      </nav>
+    </div>
+  </header>
+
   <!-- fixed layer with the coin: z-index 5, between the text lines (4 / 6) -->
   <div class="stage" aria-hidden="true">
     <canvas id="coin"></canvas>
