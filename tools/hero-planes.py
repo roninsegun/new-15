@@ -3,7 +3,7 @@ assets/img/hero/*.webp.
 - darkened per depth so the coin stays the brightest thing in the scene
   (Dmitriy: back −55 %, the boat −35 %, the front planes −25 % — "значительно
   темнее", the order matters);
-- saturation −20 % on every plane ("слишком акцентные");
+- saturation −30 % on every plane ("слишком акцентные", then "ещё чуть-чуть");
 - the boat plane fades out towards its bottom (alpha × vertical ramp: 1 down
   to FADE[0] of the height, 0 from FADE[1]) so its patch of water sinks into
   the back plane's water instead of peeling off it as the boat recedes.
@@ -15,7 +15,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'assets', 'src', 'hero')
 OUT = os.path.join(ROOT, 'assets', 'img', 'hero')
 DARKEN = {'back': 0.55, 'mid': 0.35, 'front-l': 0.25, 'front-r': 0.25}
-SAT = 0.8
+SAT = 0.7
 FADE = {'mid': (0.60, 0.86)}
 
 

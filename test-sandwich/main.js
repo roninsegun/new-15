@@ -30,6 +30,7 @@ const TURN_END = 1.5;     // frames 0→119 finish here
 const SCALE_MID = 0.6;    // at 1vh
 const SCALE_END = 0.5;    // at 1.5vh, then frozen
 const TINT = '#ff9c55';   // the painting's copper (224,136,74) lifted ×1.15 — multiplied over every frame
+const BACK_OPACITY = 0.7; // the far bank at rest — it recedes (Dmitriy tried .1: too little)
 
 const canvas = document.getElementById('coin');
 const ctx = canvas.getContext('2d');
@@ -103,14 +104,14 @@ document.fonts.ready.then(() => requestAnimationFrame(() => requestAnimationFram
   });
 })));
 
+gsap.set(back, { opacity: BACK_OPACITY });
 if (reduced) {
   state.frame = 0;
   gsap.set([canvas, glow], { scale: SCALE_END });
   /* no motion: the painting simply fades out over the first half screen */
-  gsap.fromTo([back, mid, frontL, frontR, glow], { opacity: 1 }, {
-    opacity: 0, ease: 'none',
-    scrollTrigger: { start: 0, end: () => innerHeight * 0.5, scrub: true, invalidateOnRefresh: true },
-  });
+  const st = () => ({ start: 0, end: () => innerHeight * 0.5, scrub: true, invalidateOnRefresh: true });
+  gsap.fromTo([mid, frontL, frontR, glow], { opacity: 1 }, { opacity: 0, ease: 'none', scrollTrigger: st() });
+  gsap.fromTo(back, { opacity: BACK_OPACITY }, { opacity: 0, ease: 'none', scrollTrigger: st() });
 } else {
   const tl = gsap.timeline({
     defaults: { ease: 'none' },
@@ -127,7 +128,7 @@ if (reduced) {
        the boat recedes at .3× and shrinks, the far bank drifts at .1×;
        mid + back dissolve over .5→.9, the glow over .6→1 */
     .fromTo(back, { y: 0 }, { y: vh(-0.1), duration: 1 }, 0)
-    .fromTo(back, { opacity: 1 }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.5)
+    .fromTo(back, { opacity: BACK_OPACITY }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.5)
     .fromTo(mid, { y: 0, scale: 1 }, { y: vh(-0.3), scale: 0.94, duration: 1 }, 0)
     .fromTo(mid, { opacity: 1 }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.5)
     .fromTo(frontL, { x: 0, y: 0 }, { x: vh(-1), y: vh(1), duration: 1 }, 0)
