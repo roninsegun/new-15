@@ -173,11 +173,11 @@ body {
 .header__nav--left  { justify-self: start; }
 .header__nav--right { justify-self: end; }
 .header__logo { justify-self: center; display: inline-flex; }
-.header__logo img { height: 44px; width: auto; display: block; }
+.header__logo img { height: 53px; width: auto; display: block; }
 @media (max-width: 47.99rem) {
   .header__bar { padding: 20px 5vw; }
   .header__nav { gap: 1.25rem; }
-  .header__logo img { height: 36px; }
+  .header__logo img { height: 43px; }
 }
 
 .stage {
