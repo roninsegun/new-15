@@ -29,7 +29,7 @@ const BASE = useCdn ? CDN : LOCAL;
 const TURN_END = 1.5;     // frames 0→119 finish here
 const SCALE_MID = 0.6;    // at 1vh
 const SCALE_END = 0.5;    // at 1.5vh, then frozen
-const TINT = '#ff9c55';   // the painting's copper (224,136,74) lifted ×1.15 — multiplied over every frame
+const TINT = null;        // copper grade multiplied over every frame: '#ff9c55' (the painting's copper lifted ×1.15) — off, Dmitriy: "как печенька"
 const BACK_OPACITY = 0.7; // the far bank at rest — it recedes (Dmitriy tried .1: too little)
 
 const canvas = document.getElementById('coin');
@@ -52,6 +52,7 @@ function drawFrame(i) {
   const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
   ctx.drawImage(img, 0, 0, width, height);
+  if (!TINT) return;
   /* copper grade, clipped to the coin: multiply the tint over the frame (the
      rect covers the transparent area too), then keep only the frame's alpha */
   ctx.globalCompositeOperation = 'multiply';
