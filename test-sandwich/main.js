@@ -67,20 +67,27 @@ function sizeCanvas() {
   drawFrame(targetFrame());
 }
 
+/* the frames are fetched in scroll order through a window of 8 — not 120
+   requests at once fighting the hero planes and each other for the pipe —
+   and the first frame, the only one scroll 0 needs, goes out urgent */
+const IN_FLIGHT = 8;
+let next = 0;
 function load(i) {
   const img = new Image();
   if (useCdn) img.crossOrigin = 'anonymous';
   img.decoding = 'async';
+  if (i === 0) img.fetchPriority = 'high';
   img.onload = img.onerror = () => {
     loaded += 1;
     progress.textContent = `${loaded} / ${N}`;
     if (loaded === N) progress.classList.add('done');
     if (i === targetFrame()) { current = -1; drawFrame(i); }
+    if (next < N) load(next++);
   };
   img.src = `${BASE}${pad(i)}.webp?v=${FRAMES_V}`;
   frames[i] = img;
 }
-for (let i = 0; i < N; i += 1) load(i);
+while (next < IN_FLIGHT) load(next++);
 
 /* ── scroll + coin timeline ── */
 const state = { frame: 0 };
@@ -351,10 +358,15 @@ fetch(`${SHAPE}?v=${FRAMES_V}`).then((r) => r.json()).then(async (shape) => {
 });
 
 onScroll(updateFlow);
-addEventListener('resize', () => {
+/* resize: ScrollTrigger already refreshes itself (debounced) and SplitText's
+   autoSplit re-splits and queues one more; the story re-measure and the canvas
+   resize hang on that settled refresh instead of firing per resize event.
+   Mobile URL-bar height changes are ignored — nothing here depends on vh
+   mid-scroll enough to be worth rebuilding the walk for. */
+ScrollTrigger.config({ ignoreMobileResize: true });
+ScrollTrigger.addEventListener('refresh', () => {
   if (flow) flow.measure();
-  ScrollTrigger.refresh();
-  sizeCanvas();              /* after the refresh, so the canvas is redrawn with the settled frame */
+  sizeCanvas();              /* the canvas is redrawn with the settled frame */
   updateFlow();
 });
 sizeCanvas();

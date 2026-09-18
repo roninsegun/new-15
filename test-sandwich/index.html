@@ -13,7 +13,6 @@
   <script defer src="../vendor/gsap.min.js"></script>
   <script defer src="../vendor/ScrollTrigger.min.js"></script>
   <script defer src="../vendor/SplitText.min.js"></script>
-  <script defer src="../vendor/CustomEase.min.js"></script>
   <script defer src="../vendor/locomotive-scroll.min.js"></script>
 </head>
 <body>
@@ -28,7 +27,7 @@
         <a href="#">Story</a>
       </nav>
       <a class="header__logo" href="#" aria-label="Home">
-        <img src="../assets/img/logo-lion.png" alt="">
+        <img src="../assets/img/logo-lion.png" alt="" width="88" height="80">
       </a>
       <nav class="header__nav header__nav--right t-ui" aria-label="Secondary">
         <a href="#">Journal</a>
@@ -44,8 +43,8 @@
        the planes themselves.
        z: mid 3 · title back-line 4 · coin 5 · title front-line 6 · front 7 -->
   <div class="plane plane--mid" aria-hidden="true"><img src="../assets/img/hero/mid.webp" alt="" fetchpriority="high"></div>
-  <div class="plane plane--front plane--front-l" aria-hidden="true"><img src="../assets/img/hero/front-l.webp" alt=""></div>
-  <div class="plane plane--front plane--front-r" aria-hidden="true"><img src="../assets/img/hero/front-r.webp" alt=""></div>
+  <div class="plane plane--front plane--front-l" aria-hidden="true"><img src="../assets/img/hero/front-l.webp" alt="" fetchpriority="high"></div>
+  <div class="plane plane--front plane--front-r" aria-hidden="true"><img src="../assets/img/hero/front-r.webp" alt="" fetchpriority="high"></div>
 
   <!-- fixed layer with the coin: z-index 5, between the text lines (4 / 6) -->
   <div class="stage" aria-hidden="true">
@@ -87,7 +86,9 @@
   <!-- chapters, mosaic 2.0: two icon-arch blocks. The poster word reveals by
        chars and stays centred (no shrink/dock — Dmitriy); the whole icon
        (ground + both figures) wipes in top-down as ONE curtain (.reveal-image
-       on the wrap: .is-inview + .is-loaded once all three images are in); the
+       on the wrap: .is-inview + .is-loaded once all three images are in — so
+       the images are NOT loading="lazy": the curtain hides them until they
+       load, and Chrome's lazy loader would wait for them to be visible); the
        breakout figure overflows the arch frame and rides a bold parallax
        (+.12 of the viewport over its pass), the front figure a bolder one
        (+.2) — nearer planes move faster, the ground stays (Dmitriy: make the
