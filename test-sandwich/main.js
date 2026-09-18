@@ -131,11 +131,13 @@ if (reduced) {
     .fromTo(canvas, { scale: SCALE_MID }, { scale: SCALE_END, duration: TURN_END - 1, immediateRender: false }, 1)
     /* the painting, 0→1vh — rates are fractions of the scroll distance:
        front planes leave at 1× sideways + 1× down (1.4× along the diagonal),
-       the boat recedes at .3× and shrinks, the far bank drifts at .1×;
+       the boat casts off to the RIGHT (.35×) and only a little up (.07×) while
+       it shrinks — it sails, it does not float up (Dmitriy) — the far bank
+       drifts at .1×;
        mid + back dissolve over .5→.9, the glow over .6→1 */
     .fromTo(back, { y: 0 }, { y: vh(-0.1), duration: 1 }, 0)
     .fromTo(back, { opacity: BACK_OPACITY }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.5)
-    .fromTo(mid, { y: 0, scale: 1 }, { y: vh(-0.3), scale: 0.94, duration: 1 }, 0)
+    .fromTo(mid, { x: 0, y: 0, scale: 1 }, { x: vh(0.35), y: vh(-0.07), scale: 0.94, duration: 1 }, 0)
     .fromTo(mid, { opacity: 1 }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.5)
     .fromTo(frontL, { x: 0, y: 0 }, { x: vh(-1), y: vh(1), duration: 1 }, 0)
     .fromTo(frontR, { x: 0, y: 0 }, { x: vh(1), y: vh(1), duration: 1 }, 0)

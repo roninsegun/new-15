@@ -196,6 +196,12 @@ body {
 .plane--back img { transform: scale(1.2); }
 .plane--mid   { z-index: 3; }
 .plane--front { z-index: 7; }
+/* per-plane framing (Dmitriy): the isolations stop short of the frame, so the
+   drape and the pole are zoomed past the top/bottom edges, the pole and the
+   boat sit lower. Static transforms on the img — GSAP moves the .plane box. */
+.plane--mid img     { transform: translateY(6%); }
+.plane--front-l img { transform: scale(1.2); transform-origin: 0 50%; }
+.plane--front-r img { transform: scale(1.34) translateY(12%); transform-origin: 100% 40%; }
 
 .stage {
   position: fixed;
