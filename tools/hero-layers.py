@@ -20,7 +20,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'assets', 'src', 'hero2')
 OUT = os.path.join(ROOT, 'assets', 'img', 'hero')
 SAT = 0.95
-DARKEN = {'back': 0.15, 'mid': 0.05, 'front-l': 0.0, 'front-r': 0.0}   # per depth; the coin must stay the brightest thing
+DARKEN = {'back': 0.65, 'mid': 0.05, 'front-l': 0.0, 'front-r': 0.0}   # per depth; the far bank dark (35 %) under a top-to-bottom fade mask (CSS), the coin the brightest thing
 FADE_MID = (0.86, 0.97)   # the boat's hull sinks into the bg water (fractions of the boat's own alpha bbox height)
 
 master = Image.open(os.path.join(SRC, 'master-v1.png')).convert('RGB')

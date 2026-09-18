@@ -193,7 +193,12 @@ body {
 .plane { position: fixed; inset: 0; pointer-events: none; will-change: transform, opacity; }   /* no overflow clip: the clip would ride along with the drift and expose the body */
 .plane img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 .plane--back  { z-index: 1; }
-.plane--back img { transform: scale(1.2); }
+.plane--back img {
+  transform: scale(1.2);
+  /* Dmitriy: black at the very top, the far bank surfacing towards the bottom */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.35) 40%, #000 78%);
+  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.35) 40%, #000 78%);
+}
 .plane--mid   { z-index: 3; }
 .plane--front { z-index: 7; }
 /* per-plane framing (Dmitriy): the isolations stop short of the frame, so the
