@@ -21,10 +21,13 @@ import { createFlow } from '../lib/flow-around.js';
 import { initImageLoad } from '../lib/reveal.js';
 
 const N = 120;
-const LOCAL = 'frames/';
-const CDN = 'https://cdn.jsdelivr.net/gh/roninsegun/new-15@main/test-sandwich/frames/';
-const useCdn = new URLSearchParams(location.search).get('cdn') === '1';
+const q = new URLSearchParams(location.search);
+const COIN = q.get('coin') === 'gold' ? 'frames-gold' : 'frames';   /* ?coin=gold → the new brass coin (Dmitriy's pick E) */
+const LOCAL = `${COIN}/`;
+const CDN = `https://cdn.jsdelivr.net/gh/roninsegun/new-15@main/test-sandwich/${COIN}/`;
+const useCdn = q.get('cdn') === '1';
 const BASE = useCdn ? CDN : LOCAL;
+const SHAPE = COIN === 'frames-gold' ? 'coin-shape-gold.json' : 'coin-shape.json';
 
 /* ── choreography constants (fractions of the viewport height) ── */
 const TURN_END = 1.5;     // frames 0→119 finish here
@@ -326,7 +329,7 @@ function updateFlow() {
   flow.update(cx, cy, near ? size : 0);
 }
 
-fetch('coin-shape.json').then((r) => r.json()).then(async (shape) => {
+fetch(SHAPE).then((r) => r.json()).then(async (shape) => {
   await document.fonts.ready;
   const gap = parseFloat(getComputedStyle(text).fontSize) * 0.4;   /* the .4em breathing room of the reference */
   flow = createFlow({ el: text, points: shape.points, centre: shape.centre, margin: gap });
