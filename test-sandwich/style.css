@@ -19,7 +19,7 @@
   --bg: #000000; --ink: #ffffff;
 
   --font-text: 'Inter Tight', 'Inter Tight Fallback', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: 'Newsreader', 'Times New Roman', serif;
+  --font-display: 'Caslon Antique', 'Times New Roman', serif;   /* on trial in place of 'Newsreader' (Dmitriy, 18.09) */
 
   /* ── type scale · rem on a fluid root (15px → 18px → 22px)
      resolved px:                       @390   @768   @1440   @1920 */

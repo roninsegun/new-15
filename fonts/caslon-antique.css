@@ -1,0 +1,13 @@
+/* Caslon Antique (Berne Nadall, 1894; digital: 1001fonts "Free For Commercial
+   Use" EULA — free for commercial use, the file may not be modified or
+   re-published without the author's permission) — on trial as the display
+   serif in place of Newsreader (Dmitriy, 18.09). The ORIGINAL TTF, untouched
+   (no woff2 conversion — the EULA forbids modification); Regular only, the
+   italic / bold cuts are unused. Self-hosted like Inter Tight. */
+@font-face {
+  font-family: 'Caslon Antique';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(./CaslonAntique.ttf) format('truetype');
+}
