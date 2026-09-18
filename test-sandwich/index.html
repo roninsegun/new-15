@@ -55,8 +55,13 @@
 
   <section class="screen">
     <!-- poster size (the chapters' word); the sandwich: the first line BEHIND
-         the coin, the second OVER it (Dmitriy). "Still / unspent." -->
-    <h1 class="title title--poster t-display-serif" data-split="words" data-split-mask="words" data-scroll data-scroll-offset="30%" data-scroll-repeat>
+         the coin, the second OVER it (Dmitriy). "Still / unspent."
+         NO data-scroll-repeat here: Locomotive treats a first-fold element's
+         intersection as starting at scroll 0, so at exactly 0 its progress is
+         0 = "out of view" — with repeat it stripped .is-inview whenever the
+         page sat at the very top and the title vanished (the bug). Once shown,
+         it stays. -->
+    <h1 class="title title--poster t-display-serif" data-split="words" data-split-mask="words" data-scroll data-scroll-offset="30%">
       <span class="line back">Still</span>
       <span class="line front">unspent.</span>
     </h1>

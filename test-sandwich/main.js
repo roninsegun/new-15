@@ -15,8 +15,7 @@
      once and, every scroll frame, slides each line's two halves apart just
      enough to clear the coin silhouette (coin-shape.json, traced from frame
      119); no re-wrapping, nothing to animate — the motion is the scroll.
-   ?cdn=1 → frames from jsDelivr instead of ./frames/ (the CDN check);
-   ?tune=1 → the hero tuner panel (tune.js) over the grade tokens. */
+   ?cdn=1 → frames from jsDelivr instead of ./frames/ (the CDN check). */
 import { gsap, ScrollTrigger, reduced } from '../lib/gsap.js';
 import { initScroll, onScroll, getScroll } from '../lib/scroll.js';
 import { initSplit } from '../lib/split.js';
@@ -25,12 +24,11 @@ import { initImageLoad } from '../lib/reveal.js';
 
 const N = 120;
 const q = new URLSearchParams(location.search);
-const COIN = q.get('coin') === 'copper' ? 'frames-copper' : 'frames';   /* frames/ = the brass coin (default); ?coin=copper → the old copper one */
-const LOCAL = `${COIN}/`;
-const CDN = `https://cdn.jsdelivr.net/gh/roninsegun/new-15@main/test-sandwich/${COIN}/`;
+const LOCAL = 'frames/';
+const CDN = 'https://cdn.jsdelivr.net/gh/roninsegun/new-15@main/test-sandwich/frames/';
 const useCdn = q.get('cdn') === '1';
 const BASE = useCdn ? CDN : LOCAL;
-const SHAPE = COIN === 'frames-copper' ? 'coin-shape-copper.json' : 'coin-shape.json';
+const SHAPE = 'coin-shape.json';
 const FRAMES_V = '2';      /* bump when frames/ changes under the same names (cache-buster) */
 
 /* ── choreography constants (fractions of the viewport height) ── */
@@ -38,7 +36,6 @@ const TURN_END = 1.5;     // frames 0→119 finish here
 const THROW_PEAK = 0.45;  // the throw: scale SCALE_END → 1 by here …
 const THROW_END = 1.0;    // … and back to SCALE_END by here (where it drops into the second title)
 const SCALE_END = 0.5;    // the coin's size for the rest of the page (the hero starts at it too)
-const TINT = null;        // copper grade multiplied over every frame: '#ff9c55' (the painting's copper lifted ×1.15) — off, Dmitriy: "как печенька"
 
 const canvas = document.getElementById('coin');
 const ctx = canvas.getContext('2d');
@@ -59,15 +56,6 @@ function drawFrame(i) {
   const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
   ctx.drawImage(img, 0, 0, width, height);
-  if (!TINT) return;
-  /* copper grade, clipped to the coin: multiply the tint over the frame (the
-     rect covers the transparent area too), then keep only the frame's alpha */
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = TINT;
-  ctx.fillRect(0, 0, width, height);
-  ctx.globalCompositeOperation = 'destination-in';
-  ctx.drawImage(img, 0, 0, width, height);
-  ctx.globalCompositeOperation = 'source-over';
 }
 
 function sizeCanvas() {
@@ -165,6 +153,10 @@ const TURN_VH = 1.5;                      /* the free run after the last arch: o
 const LIFT_VH = 0.04;                     /* the arc of a move: up 4vh at its middle */
 const SPRING_PERIOD = 1.3;                /* s — the follower's natural period (ζ = 1, no overshoot) */
 const MAX_VH_PER_S = 1.2;                 /* the follower never runs the choreography faster than this (a wheel flick → a stately glide) */
+const MAX_LAG_VH = 0.6;                   /* …but it never trails the scroll by more than this: a jump (End/Home, a scrollbar drag, a long fling)
+                                             is caught up to within .6vh at once — and from a screen above the walk's range (the hero, the story)
+                                             it lands outright: nobody is watching the choreography there, while a coin still parked at an arch
+                                             over the hero was the "lagging position" bug */
 const plates = gsap.utils.toArray('[data-plate]');
 const chapters = document.querySelector('[data-chapters]');
 const homage = document.querySelector('[data-homage]');
@@ -180,6 +172,20 @@ if (!reduced && plates.length) {
   };
   const range = { s0: 0, d: 1 };
   const spring = { cur: 0, vel: 0, target: 0 };
+  let shown = -1;   /* the progress last rendered — render only on change */
+  const render = (force) => {
+    if (!force && spring.cur === shown) return;
+    shown = spring.cur;
+    if (scrollY < innerHeight * TURN_END) {
+      /* inside the hero's scrub: the throw owns the canvas scale and the frame, and the walk's start
+         state (scale .5, frame 119) must not be written over it — the walk only keeps the coin centred
+         here and is left unrendered; it re-renders from wherever it was on the way back in */
+      gsap.set(canvas, { x: 0, y: 0 });
+      return;
+    }
+    walk.progress(spring.cur);
+    drawFrame(targetFrame());
+  };
   const buildWalk = () => {
     if (walk) walk.kill();
     const vh = innerHeight;
@@ -233,8 +239,7 @@ if (!reduced && plates.length) {
     /* land exactly where the scroll is — no glide on load / resize */
     spring.target = spring.cur = gsap.utils.clamp(0, 1, (scrollY - S0) / D);
     spring.vel = 0;
-    walk.progress(spring.cur);
-    drawFrame(targetFrame());
+    render(true);
   };
   buildWalk();
   ScrollTrigger.addEventListener('refreshInit', buildWalk);
@@ -243,24 +248,25 @@ if (!reduced && plates.length) {
      frame 119 (the walk's own start state), so a refresh mid-walk (a resize,
      the load event) would park the coin at the centre until the next scroll
      tick moved the spring. Re-render the walk once the refresh is done. */
-  ScrollTrigger.addEventListener('refresh', () => {
-    if (spring.cur <= 0) return;   /* still in the hero: its own scrub owns the canvas — a forced render at 0 would clobber it */
-    walk.render(walk.totalTime(), true, true); drawFrame(targetFrame());
-  });
+  ScrollTrigger.addEventListener('refresh', () => { if (spring.cur > 0) { walk.render(walk.totalTime(), true, true); drawFrame(targetFrame()); } });
   /* the follower: semi-implicit Euler on a critically damped spring */
   const omega = (2 * Math.PI) / SPRING_PERIOD;
   const follow = (time, deltaMs) => {
     spring.target = gsap.utils.clamp(0, 1, (scrollY - range.s0) / range.d);
+    const far = scrollY < range.s0 - innerHeight;
+    const maxLag = far ? 0 : (MAX_LAG_VH * innerHeight) / range.d;
+    const lag = spring.target - spring.cur;
+    if (Math.abs(lag) > maxLag) { spring.cur = spring.target - Math.sign(lag) * maxLag; if (far) spring.vel = 0; }
     const gap = spring.target - spring.cur;
-    if (Math.abs(gap) < 1e-6 && Math.abs(spring.vel) < 1e-6) return;
-    const dt = Math.min(deltaMs / 1000, 1 / 30);
-    const acc = omega * omega * gap - 2 * omega * spring.vel;
-    const vmax = (MAX_VH_PER_S * innerHeight) / range.d;   /* progress units per second */
-    spring.vel = gsap.utils.clamp(-vmax, vmax, spring.vel + acc * dt);
-    spring.cur += spring.vel * dt;
-    if (Math.abs(spring.target - spring.cur) < 1e-6) { spring.cur = spring.target; spring.vel = 0; }
-    walk.progress(spring.cur);
-    drawFrame(targetFrame());
+    if (Math.abs(gap) >= 1e-6 || Math.abs(spring.vel) >= 1e-6) {
+      const dt = Math.min(deltaMs / 1000, 1 / 30);
+      const acc = omega * omega * gap - 2 * omega * spring.vel;
+      const vmax = (MAX_VH_PER_S * innerHeight) / range.d;   /* progress units per second */
+      spring.vel = gsap.utils.clamp(-vmax, vmax, spring.vel + acc * dt);
+      spring.cur += spring.vel * dt;
+      if (Math.abs(spring.target - spring.cur) < 1e-6) { spring.cur = spring.target; spring.vel = 0; }
+    }
+    render();
   };
   gsap.ticker.add(follow);
   devFollow = follow; devSpring = spring;
@@ -353,15 +359,9 @@ addEventListener('resize', () => {
 });
 sizeCanvas();
 
-/* ?tune=1 — the hero tuner (tune.js + vendor/lil-gui): the grade of the
-   planes as live sliders over the CSS tokens. Nothing of it is fetched
-   without the flag. */
-let tune = null;
-if (q.get('tune') === '1') import('./tune.js').then((m) => m.initTune()).then((gui) => { tune = gui; });
-
 /* dev handle */
 window.__test = {
-  frames, state, updateFlow, get flow() { return flow; }, get tune() { return tune; },
+  frames, state, updateFlow, get flow() { return flow; },
   get loaded() { return loaded; },
   get current() { return current; },
   get scale() { return gsap.getProperty(canvas, 'scale'); },

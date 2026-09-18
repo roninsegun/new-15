@@ -64,12 +64,6 @@
   --lh-display-serif: .95;
   --w-display-serif: 300;   /* Light (Dmitriy: trying 300; was 500) */
 
-  /* hero grade tokens — the numbers the ?tune=1 panel (tune.js) turns; the
-     defaults ARE the look, so fixing a setting = writing it here. Dmitriy's
-     grade (18.09): sat .88 · bright .83 · contrast 1; his temperature −70 is
-     not a token — it is baked into the WebPs (tools/hero-layers.py TEMP). */
-  --hero-sat: .88; --hero-bri: .83; --hero-con: 1;   /* all three planes */
-
   /* Undr Drift reveal tokens, verbatim */
   --ease-out-expo: cubic-bezier(.19, 1, .22, 1);
   --dur-word: 1.6s;
@@ -77,10 +71,8 @@
   --split-mask-pad: .08em;
   --split-mask-bleed-y: .3em;
 
-  /* Undr Drift image-reveal tokens (new-12 A5), verbatim */
+  /* Undr Drift image-reveal easing (new-12 A5), verbatim */
   --ease-quart: cubic-bezier(.41, .35, .2, 1);
-  --dur-image: 1.2s;
-  --tint-image: color-mix(in oklab, var(--ink) 10%, transparent);
 }
 @media (min-width: 48rem) {
   :root {
@@ -153,7 +145,7 @@ body {
    mask, 75ms apart, once the title is in view. Everything animated lives
    INSIDE .line — the line itself and .title never get transform/opacity,
    so the z-index sandwich stays intact. */
-:is(.title, .chapter__title):where(html.js *):not(:has(.word)) .line { opacity: 0; }   /* no flash before SplitText runs (opacity on .line is safe) */
+.title:where(html.js *):not(:has(.word)) .line { opacity: 0; }   /* no flash before SplitText runs (opacity on .line is safe) */
 .word-mask, .char-mask {
   display: inline-block;
   padding-right: var(--split-mask-pad);
@@ -166,8 +158,8 @@ body {
   transition: transform var(--dur-word) var(--ease-out-expo);
   transition-delay: calc(var(--step-word) * var(--word, 0));
 }
-:is(.title, .chapter__title).is-inview .word { transform: translateY(0%); }
-:is(.title, .chapter__title):not(.is-inview) .word { transition-duration: 0s; transition-delay: 0s; }  /* instant reset out of view → replays */
+.title.is-inview .word { transform: translateY(0%); }
+.title:not(.is-inview) .word { transition-duration: 0s; transition-delay: 0s; }  /* instant reset out of view → replays (screen 2; the hero title never repeats) */
 @media (prefers-reduced-motion: reduce) {
   .word { transition: none; transform: none; }
 }
@@ -199,14 +191,11 @@ body {
    .line), so transform / opacity on them is safe. All three share one frame
    (2688×1520) and one cover-fit, so they register against each other exactly.
    No far bank and no glow behind the coin: the scene sits on the page's
-   black (Dmitriy — dropped, "чтобы не грузило"). */
+   black (Dmitriy — dropped, "чтобы не грузило"). Dmitriy's grade (sat .88,
+   bright .83, temperature −70) is BAKED into the WebPs (tools/hero-layers.py)
+   — no CSS filter on three full-screen layers every frame. */
 .plane { position: fixed; inset: 0; pointer-events: none; will-change: transform, opacity; }   /* no overflow clip: the clip would ride along with the drift and expose the body */
 .plane img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
-/* the grade: accelerated CSS filters from the tokens (planes are leaves of
-   the root stacking context — a filter on their img cannot touch the
-   sandwich). Under the tuner, temperature/tint prepend an SVG matrix. */
-.plane img { filter: saturate(var(--hero-sat)) brightness(var(--hero-bri)) contrast(var(--hero-con)); }
-html.is-tuning .plane img { filter: url(#hero-grade) saturate(var(--hero-sat)) brightness(var(--hero-bri)) contrast(var(--hero-con)); }
 .plane--mid   { z-index: 3; }
 .plane--front { z-index: 7; }
 /* per-plane framing (Dmitriy): the isolations stop short of the frame, so the
@@ -232,11 +221,8 @@ html.is-tuning .plane img { filter: url(#hero-grade) saturate(var(--hero-sat)) b
   /* scale is scrubbed by scroll in main.js (GSAP writes the transform): the throw .5 → 1 → .5 */
   transform-origin: center;
 }
-/* ?tune=1 — the lil-gui panel (tune.js) sits under the header, off the nav */
-.lil-gui.autoPlace { top: 112px; right: 4vw; --width: 260px; --font-size: 11px; --input-font-size: 11px; }
 
-.progress { text-transform: uppercase; letter-spacing: .12em; opacity: .5; }
-.progress { position: absolute; left: 0; right: 0; bottom: 24px; text-align: center; }
+.progress { position: absolute; left: 0; right: 0; bottom: 24px; text-align: center; text-transform: uppercase; letter-spacing: .12em; opacity: .5; }
 .progress.done { display: none; }
 
 /* ── the story: flows around the fixed coin ──
@@ -336,7 +322,6 @@ html.is-tuning .plane img { filter: url(#hero-grade) saturate(var(--hero-sat)) b
 .arch-clip--bg img { opacity: .5; }
 /* the coin's anchor: the arch centre (main.js reads [data-plate] = .arch-clip--bg) */
 .chapter__text { max-width: 30rem; position: relative; z-index: 2; }
-.chapter__lead { }
 .chapter__meta { margin-top: 2em; letter-spacing: .04em; opacity: .55; }   /* lowercase — no caps in captions */
 .chapter__name { font-size: var(--fs-sublead); margin-top: .8em; }
 
@@ -457,5 +442,4 @@ html.is-tuning .plane img { filter: url(#hero-grade) saturate(var(--hero-sat)) b
   .title--poster, .chapter__word { font-size: clamp(4rem, 19vw, 6rem); }
   .chapter__word { margin-bottom: -.1em; }
   .homage-panel__box { width: 92vw; }
-  .homage-caps__c--tl, .homage-caps__c--tr { top: 76px; }
 }

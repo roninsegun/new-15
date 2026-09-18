@@ -20,12 +20,11 @@ from PIL import Image, ImageChops, ImageDraw, ImageEnhance
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'assets', 'src', 'hero2')
 OUT = os.path.join(ROOT, 'assets', 'img', 'hero')
-SAT = 0.95
+SAT = 0.95 * 0.88        # the base desaturation × Dmitriy's grade (18.09, from the tuner panel) — all baked, no CSS filter
+BRIGHT = 0.83            # …his brightness
 DARKEN = {'mid': 0.05, 'front-l': 0.0, 'front-r': 0.0}   # per depth: the boat a touch darker, the coin the brightest thing
-# Dmitriy's grade from the ?tune=1 panel (18.09): temperature −70 (cool) — baked
-# here with the tuner's own formula (test-sandwich/tune.js `gains`), applied
-# LAST, on the graded pixels, exactly where the tuner's SVG matrix sat; his
-# saturation .88 / brightness .83 stay CSS tokens (style.css --hero-*)
+# …and his temperature −70 (cool), applied LAST on the graded pixels — the
+# panel's own formula (R·(1+.15t) · B·(1−.15t) · G·(1−.15u), sRGB)
 TEMP, TINT = -70, 0
 def gains(temp, tint):
     t, u = temp / 100, tint / 100
@@ -58,7 +57,7 @@ def register(src, scales=np.arange(0.5, 1.26, 0.025)):
 
 def grade(im, k):
     rgb = ImageEnhance.Color(im.convert('RGB')).enhance(SAT)
-    rgb = ImageEnhance.Brightness(rgb).enhance(1 - k)
+    rgb = ImageEnhance.Brightness(rgb).enhance((1 - k) * BRIGHT)
     arr = np.asarray(rgb).astype(np.float32) * np.array(gains(TEMP, TINT), dtype=np.float32)   # sRGB, alpha untouched
     return Image.fromarray(np.clip(arr + 0.5, 0, 255).astype(np.uint8), 'RGB')
 

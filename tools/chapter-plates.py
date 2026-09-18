@@ -53,12 +53,7 @@ def layer(src, dst, cap=1600, crop=None, erase=()):
     rgb.save(os.path.join(OUT, dst), 'WEBP', quality=92, method=6)
     report(dst)
 
-plate('layer-a-fon.png', 'mint-fon.webp')
-layer('cut-a-old.png', 'mint-old.webp', crop=(0.36, 0.10, 1, 1), erase=((0, 0, 0.42, 0.44), (0, 0.86, 0.14, 1)))
-layer('cut-a-boy.png', 'mint-boy.webp', crop=(0, 0, 0.63, 1), erase=((0.72, 0, 1, 0.62), (0.74, 0.4, 1, 0.95), (0.86, 0, 1, 1)))
-plate('layer-b-sea.png', 'ferry-fon.webp')
-layer('cut-b-ferry.png', 'ferry-old.webp', crop=(0, 0, 0.74, 1), erase=((0.82, 0, 1, 0.6), (0.86, 0, 1, 0.14)))
-layer('cut-b-girl.png', 'ferry-girl.webp', crop=(0.30, 0, 1, 1), erase=((0, 0, 0.28, 0.42), (0.4, 0, 0.8, 0.05)))
+# the old chapter plates (mint-*/ferry-*) are gone — the arches replaced them (assets/img/arches, tools/arch-*.py)
 plate('homage-bg.png', 'homage-bg.webp', size=(1344, 752))
 layer('cut-arm-l.png', 'homage-arm-l.webp')
 layer('cut-arm-r.png', 'homage-arm-r.webp')
