@@ -144,25 +144,28 @@ if (reduced) {
 }
 
 /* ── mosaic 2.0 + the homage ──
-   The coin, from the chapters on (Dmitriy): ONE master timeline over the
-   whole range (chapters' arrival → end of the homage), 1 unit = 1px of
-   scroll, rebuilt from fresh rects on every ScrollTrigger refresh — so no
-   two tweens ever fight over x/scale and a resize cannot strand it at a
-   stale anchor. Inside it: the frames turn continuously and linearly
-   (landing face-on: a whole number of turns); every move to an arch centre
-   rides power2.inOut with a slight lift (Emil: on-screen movement is
-   ease-in-out, never linear), shrinking to half over the arch and back to
-   full as the arch's bottom passes the coin; then to centre before the
-   fresco rises. scrub .8 lets the coin catch up to the scroll with a little
-   inertia instead of jerking at it. Words: the second block's poster word
-   docks beside its text. Homage: one master scrub over the spacer. */
+   The coin, from the chapters on (Dmitriy): ONE master timeline `walk` over
+   the whole range (chapters' arrival → end of the homage), 1 unit = 1px of
+   scroll, rebuilt from fresh rects on every ScrollTrigger refresh. It is
+   NOT scrubbed: the scroll only sets a target progress, and a critically
+   damped spring on the ticker carries the timeline to it — the coin
+   accelerates and brakes in a bell, so a wheel flick makes it glide, not
+   leap (Emil: springs feel natural because they simulate physics; the
+   default scrub catch-up is expo-out and starts with a jolt). Inside: the
+   frames turn continuously (landing face-on: whole turns); every move to an
+   arch centre rides power2.inOut with a slight lift, shrinking to half over
+   the arch and back to full as the arch's bottom passes the coin; then to
+   centre before the fresco rises. */
 const ARCH_SCALE = SCALE_END * 0.5;       /* −50 % over an arch */
 const TURN_VH = 1.5;                      /* one full turn per 1.5 viewport heights of scroll */
 const LIFT_VH = 0.04;                     /* the arc of a move: up 4vh at its middle */
+const SPRING_PERIOD = 1.3;                /* s — the follower's natural period (ζ = 1, no overshoot) */
+const MAX_VH_PER_S = 1.2;                 /* the follower never runs the choreography faster than this (a wheel flick → a stately glide) */
 const plates = gsap.utils.toArray('[data-plate]');
 const chapters = document.querySelector('[data-chapters]');
 const homage = document.querySelector('[data-homage]');
 let walk = null;
+let devFollow = null; let devSpring = null;   /* dev handle: step the follower by hand */
 if (!reduced && plates.length) {
   const FACE = N - 1;                       /* frame 119: face-on, where the hero left it */
   const docTop = (el) => el.getBoundingClientRect().top + scrollY;
@@ -171,18 +174,18 @@ if (!reduced && plates.length) {
     const r = el.getBoundingClientRect();
     return (r.left + r.right) / 2 - innerWidth / 2;   /* the ARCH CENTRE */
   };
+  const range = { s0: 0, d: 1 };
+  const spring = { cur: 0, vel: 0, target: 0 };
   const buildWalk = () => {
-    if (walk) { walk.scrollTrigger && walk.scrollTrigger.kill(); walk.kill(); }
+    if (walk) walk.kill();
     const vh = innerHeight;
     const S0 = docTop(chapters) - 0.8 * vh;
     const S1 = docTop(homage) + homage.offsetHeight - vh;
     const D = S1 - S0;
+    range.s0 = S0; range.d = D;
     const at = (docY, frac) => docY - frac * vh - S0;   /* timeline time of "docY at viewport fraction frac" */
     const turns = Math.max(1, Math.round(D / (vh * TURN_VH)));
-    walk = gsap.timeline({
-      defaults: { ease: 'none', immediateRender: false },
-      scrollTrigger: { start: S0, end: S1, scrub: 0.8, onUpdate: () => drawFrame(targetFrame()) },
-    });
+    walk = gsap.timeline({ paused: true, defaults: { ease: 'none', immediateRender: false } });
     walk.fromTo(state, { frame: FACE }, { frame: FACE + turns * N, duration: D }, 0);
     const move = (t0, t1, x0, x1) => {
       const d = t1 - t0;
@@ -191,27 +194,50 @@ if (!reduced && plates.length) {
         .fromTo(canvas, { y: -LIFT_VH * vh }, { y: 0, duration: d / 2, ease: 'sine.in' }, t0 + d / 2);
     };
     let x = 0;
+    let prevLeaveEnd = -Infinity;
     plates.forEach((plate) => {
       const wrap = plate.closest('.chapter__archwrap');
       const wt = docTop(wrap);
       const wb = wt + wrap.offsetHeight;
       const cx = centreX(plate);
-      /* approach: to the arch centre, shrinking — starts after the previous arch's leave */
-      const a0 = at(wt, 0.45); const a1 = at(wt, 0.08);
+      /* approach: long and early, but never before the previous arch's leave has finished */
+      const a0 = Math.max(at(wt, 0.75), prevLeaveEnd + 0.02 * vh); const a1 = at(wt, 0.08);
       move(a0, a1, x, cx);
       walk.fromTo(canvas, { scale: SCALE_END }, { scale: ARCH_SCALE, duration: a1 - a0, ease: 'power2.inOut' }, a0);
       /* leave: the arch's bottom passes the coin (viewport centre) — back to full */
-      const l0 = at(wb, 0.62); const l1 = at(wb, 0.42);
+      const l0 = at(wb, 0.72); const l1 = at(wb, 0.4);
       walk.fromTo(canvas, { scale: ARCH_SCALE }, { scale: SCALE_END, duration: l1 - l0, ease: 'power2.inOut' }, l0);
+      prevLeaveEnd = l1;
       x = cx;
     });
     /* re-centre BEFORE the fresco rises (the homage master starts at 'top 80%') */
     const ht = docTop(homage);
     move(at(ht, 0.98), at(ht, 0.8), x, 0);
-    walk.scrollTrigger.update();
+    /* land exactly where the scroll is — no glide on load / resize */
+    spring.target = spring.cur = gsap.utils.clamp(0, 1, (scrollY - S0) / D);
+    spring.vel = 0;
+    walk.progress(spring.cur);
+    drawFrame(targetFrame());
   };
   buildWalk();
   ScrollTrigger.addEventListener('refreshInit', buildWalk);
+  /* the follower: semi-implicit Euler on a critically damped spring */
+  const omega = (2 * Math.PI) / SPRING_PERIOD;
+  const follow = (time, deltaMs) => {
+    spring.target = gsap.utils.clamp(0, 1, (scrollY - range.s0) / range.d);
+    const gap = spring.target - spring.cur;
+    if (Math.abs(gap) < 1e-6 && Math.abs(spring.vel) < 1e-6) return;
+    const dt = Math.min(deltaMs / 1000, 1 / 30);
+    const acc = omega * omega * gap - 2 * omega * spring.vel;
+    const vmax = (MAX_VH_PER_S * innerHeight) / range.d;   /* progress units per second */
+    spring.vel = gsap.utils.clamp(-vmax, vmax, spring.vel + acc * dt);
+    spring.cur += spring.vel * dt;
+    if (Math.abs(spring.target - spring.cur) < 1e-6) { spring.cur = spring.target; spring.vel = 0; }
+    walk.progress(spring.cur);
+    drawFrame(targetFrame());
+  };
+  gsap.ticker.add(follow);
+  devFollow = follow; devSpring = spring;
 
   /* the SECOND poster word docks beside its text (the first stays centred —
      Dmitriy). Alignment is measured on the GLYPHS (first/last char masks),
@@ -324,6 +350,7 @@ window.__test = {
   get scale() { return gsap.getProperty(canvas, 'scale'); },
   planes: { back, mid, frontL, frontR }, glow,
   get walk() { return walk; },
+  follow: (dtMs) => devFollow && devFollow(0, dtMs), get spring() { return devSpring; },
   get scroll() { return getScroll(); },   /* Lenis owns the scroll: drive it through here, not window.scrollTo */
   base: BASE,
 };

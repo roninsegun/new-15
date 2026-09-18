@@ -299,17 +299,25 @@ body {
    (z3); the breakout layer (z2) is their unclipped sibling in between —
    the sandwich. overflow clipping is not stacking, so the coin (fixed z5)
    still rides over all three. No transforms on any of these boxes. */
-.chapter__archwrap { position: relative; aspect-ratio: 9 / 16; margin-top: calc(-100% * 4 / 9); }   /* the canvas's breakout strip (16/9 − 4/3 = 4/9 of the width) hangs above the grid row: the row aligns on the ARCH */
+.chapter__archwrap { position: relative; aspect-ratio: 1 / 1.586; margin-top: -25.27%; }   /* Dmitriy's canvas: W × 1.586W; the .2527W breakout strip hangs above the grid row, so the row aligns on the ARCH */
 .arch-clip {
   position: absolute; left: 0; right: 0; bottom: 0;
-  height: calc(100% * 4 / 3 * 9 / 16);          /* the 3:4 window: 75 % of the 9:16 canvas */
+  height: calc(100% * (4 / 3) / 1.586);           /* the 3:4 window: 84.07 % of the canvas */
   overflow: hidden;
   border-radius: 50% 50% 0 0 / 37.5% 37.5% 0 0;   /* semicircle: r = w/2 = 37.5 % of a 3:4 box */
+  --arch-top: 25.27%;                              /* the window's top, in % of the width, for the layers inside */
 }
 .arch-clip--bg { z-index: 1; }
 .arch-clip--front { z-index: 3; }
-.arch-clip img { position: absolute; left: 0; bottom: 0; width: 100%; height: auto; display: block; }   /* the full canvas, bottom-registered */
-.arch-mid { position: absolute; inset: 0; width: 100%; height: auto; z-index: 2; pointer-events: none; }
+/* every layer: our full render placed at --l / --t / --w in % of the canvas
+   width (margin-top is width-relative, so one unit system throughout);
+   --t is measured from the canvas top, the clips subtract their own top */
+.arch-clip img, .arch-mid {
+  position: absolute; top: 0; height: auto; display: block;
+  left: var(--l, 0%); width: var(--w, 100%);
+  margin-top: calc(var(--t, 0%) - var(--arch-top, 0%));
+}
+.arch-mid { z-index: 2; pointer-events: none; }
 /* reveals: the bg clip plays the A5 mask; the mid and front fade in behind it */
 .arch-clip--front img, .arch-mid { opacity: 0; transition: opacity .9s var(--ease-quart); }
 .chapter__archwrap.is-inview .arch-mid { opacity: 1; transition-delay: .5s; }
