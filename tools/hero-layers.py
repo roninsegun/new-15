@@ -1,12 +1,13 @@
 """Hero 2 planes from one master (assets/src/hero2/master-v1.png, 16:9):
-  bg.png            opaque repaint without the figures (Nano Banana edit)
   mid.png           GPT-2.5 transparent isolation: the ferryman + boat
   front-r.png       …: the pole
   front-l.png       …: the draped foreground figure
+(bg.png — the far bank — is no longer baked: Dmitriy dropped the back plane
+and the glow, "чтобы не грузило"; the planes sit on the page's black.)
 Each isolation may be re-framed by the generator, so it is REGISTERED onto
 the master (masked template matching over a scale sweep, cv2) and written
 back onto the full canvas; then everything is graded and baked to
-assets/img/hero/{back,mid,front-l,front-r}.webp — the same names the hero
+assets/img/hero/{mid,front-l,front-r}.webp — the same names the hero
 choreography in main.js already uses. A review sheet + composite is written
 to assets/src/hero2/review.png.
   python3 tools/hero-layers.py            (register + bake + review)
@@ -20,7 +21,15 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'assets', 'src', 'hero2')
 OUT = os.path.join(ROOT, 'assets', 'img', 'hero')
 SAT = 0.95
-DARKEN = {'back': 0.3, 'mid': 0.05, 'front-l': 0.0, 'front-r': 0.0}   # per depth; the far bank dark (35 %) under a top-to-bottom fade mask (CSS), the coin the brightest thing
+DARKEN = {'mid': 0.05, 'front-l': 0.0, 'front-r': 0.0}   # per depth: the boat a touch darker, the coin the brightest thing
+# Dmitriy's grade from the ?tune=1 panel (18.09): temperature −70 (cool) — baked
+# here with the tuner's own formula (test-sandwich/tune.js `gains`), applied
+# LAST, on the graded pixels, exactly where the tuner's SVG matrix sat; his
+# saturation .88 / brightness .83 stay CSS tokens (style.css --hero-*)
+TEMP, TINT = -70, 0
+def gains(temp, tint):
+    t, u = temp / 100, tint / 100
+    return 1 + 0.15 * t, 1 - 0.15 * u, 1 - 0.15 * t     # R · G · B  (u > 0 = magenta)
 FADE_MID = (0.86, 0.97)   # the boat's hull sinks into the bg water (fractions of the boat's own alpha bbox height)
 
 master = Image.open(os.path.join(SRC, 'master-v1.png')).convert('RGB')
@@ -49,11 +58,11 @@ def register(src, scales=np.arange(0.5, 1.26, 0.025)):
 
 def grade(im, k):
     rgb = ImageEnhance.Color(im.convert('RGB')).enhance(SAT)
-    return ImageEnhance.Brightness(rgb).enhance(1 - k)
+    rgb = ImageEnhance.Brightness(rgb).enhance(1 - k)
+    arr = np.asarray(rgb).astype(np.float32) * np.array(gains(TEMP, TINT), dtype=np.float32)   # sRGB, alpha untouched
+    return Image.fromarray(np.clip(arr + 0.5, 0, 255).astype(np.uint8), 'RGB')
 
 layers = {}
-bg = Image.open(os.path.join(SRC, 'bg.png')).convert('RGB').resize(master.size, Image.LANCZOS)
-layers['back'] = bg.convert('RGBA')
 layers['mid'] = register('mid.png')
 layers['front-r'] = register('front-r.png')
 layers['front-l'] = register('front-l.png')
@@ -67,18 +76,15 @@ layers['mid'].putalpha(ImageChops.multiply(a, Image.frombytes('L', (1, MH), col)
 os.makedirs(OUT, exist_ok=True)
 for name, im in layers.items():
     g = grade(im, DARKEN[name])
-    if name == 'back':
-        g.save(os.path.join(OUT, 'back.webp'), 'WEBP', quality=86, method=6)
-    else:
-        g.putalpha(im.getchannel('A')); g.save(os.path.join(OUT, f'{name}.webp'), 'WEBP', quality=90, method=6)
+    g.putalpha(im.getchannel('A')); g.save(os.path.join(OUT, f'{name}.webp'), 'WEBP', quality=90, method=6)
     p = os.path.join(OUT, f'{name}.webp'); print(f'{name:8s} {Image.open(p).size} {os.path.getsize(p)//1024} KB')
 
-# review: master · back · mid · front-l · front-r · composite (graded, on black)
+# review: master · mid · front-l · front-r · composite (graded, on black)
 comp = Image.new('RGBA', master.size, (0, 0, 0, 255))
-for name in ('back', 'mid', 'front-l', 'front-r'):
+for name in ('mid', 'front-l', 'front-r'):
     comp.alpha_composite(Image.open(os.path.join(OUT, f'{name}.webp')).convert('RGBA'))
-tiles = [master, layers['back'].convert('RGB'), layers['mid'], layers['front-l'], layers['front-r'], comp.convert('RGB')]
-labels = ['master', 'back', 'mid', 'front-l', 'front-r', 'composite']
+tiles = [master, layers['mid'], layers['front-l'], layers['front-r'], comp.convert('RGB')]
+labels = ['master', 'mid', 'front-l', 'front-r', 'composite']
 th = 300; ims = []
 for t in tiles:
     t = t.copy(); t.thumbnail((10000, th)); ims.append(t)

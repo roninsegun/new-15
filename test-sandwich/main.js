@@ -3,10 +3,11 @@
      (frames 0→119 over 0→150vh; scale 1→.6 by 100vh, →.5 by 150vh), then
      frozen face-on at the centre for the rest of the page; every frame is
      graded to the painting's copper on the canvas;
-   - hero painting: four fixed planes around the coin ride the same scrub over
-     0→100vh — the scene lets go of the coin (docs/concept.md storyboard): the
-     shore figures leave faster than the scroll, the boat recedes and
-     dissolves, the far bank drifts and goes black, the glow goes with it;
+   - hero painting: three fixed planes around the coin ride the same scrub
+     over 0→100vh — the scene lets go of the coin (docs/concept.md
+     storyboard): the shore figures leave faster than the scroll, the boat
+     casts off and dissolves; no far bank, no glow — the black of the page
+     is the water (Dmitriy: dropped, "чтобы не грузило");
    - titles: SplitText words in masks (lib/split.js), `.is-inview` from
      Locomotive's observer drives the CSS reveal-words contract;
    - story: the paragraph parts around the coin — lib/flow-around.js wraps it
@@ -14,7 +15,7 @@
      enough to clear the coin silhouette (coin-shape.json, traced from frame
      119); no re-wrapping, nothing to animate — the motion is the scroll.
    ?cdn=1 → frames from jsDelivr instead of ./frames/ (the CDN check);
-   ?tune=1 → the hero tuner panel (tune.js) over the grade / glow tokens. */
+   ?tune=1 → the hero tuner panel (tune.js) over the grade tokens. */
 import { gsap, ScrollTrigger, reduced } from '../lib/gsap.js';
 import { initScroll, onScroll, getScroll } from '../lib/scroll.js';
 import { initSplit } from '../lib/split.js';
@@ -36,13 +37,11 @@ const TURN_END = 1.5;     // frames 0→119 finish here
 const SCALE_MID = 0.6;    // at 1vh
 const SCALE_END = 0.5;    // at 1.5vh, then frozen
 const TINT = null;        // copper grade multiplied over every frame: '#ff9c55' (the painting's copper lifted ×1.15) — off, Dmitriy: "как печенька"
-const BACK_OPACITY = 1;   // the far bank at rest: its darkness now lives in the bake + the top fade mask
 
 const canvas = document.getElementById('coin');
 const ctx = canvas.getContext('2d');
 const progress = document.getElementById('progress');
-const glow = document.getElementById('glow');
-const [back, mid, frontL, frontR] = ['back', 'mid', 'front-l', 'front-r'].map((n) => document.querySelector(`.plane--${n}`));
+const [mid, frontL, frontR] = ['mid', 'front-l', 'front-r'].map((n) => document.querySelector(`.plane--${n}`));
 const frames = new Array(N);
 let loaded = 0;
 let current = -1;
@@ -115,14 +114,11 @@ document.fonts.ready.then(() => requestAnimationFrame(() => requestAnimationFram
   });
 })));
 
-gsap.set(back, { opacity: BACK_OPACITY });
 if (reduced) {
   state.frame = 0;
-  gsap.set([canvas, glow], { scale: SCALE_END });
+  gsap.set(canvas, { scale: SCALE_END });
   /* no motion: the painting simply fades out over the first half screen */
-  const st = () => ({ start: 0, end: () => innerHeight * 0.5, scrub: true, invalidateOnRefresh: true });
-  gsap.fromTo([mid, frontL, frontR, glow], { opacity: 1 }, { opacity: 0, ease: 'none', scrollTrigger: st() });
-  gsap.fromTo(back, { opacity: BACK_OPACITY }, { opacity: 0, ease: 'none', scrollTrigger: st() });
+  gsap.fromTo([mid, frontL, frontR], { opacity: 1 }, { opacity: 0, ease: 'none', scrollTrigger: { start: 0, end: () => innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } });
 } else {
   const tl = gsap.timeline({
     defaults: { ease: 'none' },
@@ -137,17 +133,12 @@ if (reduced) {
     /* the painting, 0→1vh — rates are fractions of the scroll distance:
        front planes leave at 1× sideways + 1× down (1.4× along the diagonal),
        the boat casts off to the RIGHT (.35×) and only a little up (.07×) while
-       it shrinks — it sails, it does not float up (Dmitriy) — the far bank
-       drifts at .1×;
-       mid + back dissolve over .5→.9, the glow over .6→1 */
-    .fromTo(back, { y: 0 }, { y: vh(-0.1), duration: 1 }, 0)
-    .fromTo(back, { opacity: BACK_OPACITY }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.5)
+       it shrinks — it sails, it does not float up (Dmitriy) — and dissolves
+       over .5→.9 */
     .fromTo(mid, { x: 0, y: 0, scale: 1 }, { x: vh(0.35), y: vh(-0.07), scale: 0.94, duration: 1 }, 0)
     .fromTo(mid, { opacity: 1 }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.5)
     .fromTo(frontL, { x: 0, y: 0 }, { x: vh(-1), y: vh(1), duration: 1 }, 0)
-    .fromTo(frontR, { x: 0, y: 0 }, { x: vh(1), y: vh(1), duration: 1 }, 0)
-    .fromTo(glow, { scale: 1 }, { scale: SCALE_MID, duration: 1 }, 0)
-    .fromTo(glow, { opacity: 1 }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.6);
+    .fromTo(frontR, { x: 0, y: 0 }, { x: vh(1), y: vh(1), duration: 1 }, 0);
 }
 
 /* ── mosaic 2.0 + the homage ──
@@ -350,8 +341,8 @@ addEventListener('resize', () => {
 sizeCanvas();
 
 /* ?tune=1 — the hero tuner (tune.js + vendor/lil-gui): the grade of the
-   planes and the glow as live sliders over the CSS tokens. Nothing of it is
-   fetched without the flag. */
+   planes as live sliders over the CSS tokens. Nothing of it is fetched
+   without the flag. */
 let tune = null;
 if (q.get('tune') === '1') import('./tune.js').then((m) => m.initTune()).then((gui) => { tune = gui; });
 
@@ -361,7 +352,7 @@ window.__test = {
   get loaded() { return loaded; },
   get current() { return current; },
   get scale() { return gsap.getProperty(canvas, 'scale'); },
-  planes: { back, mid, frontL, frontR }, glow,
+  planes: { mid, frontL, frontR },
   get walk() { return walk; },
   follow: (dtMs) => devFollow && devFollow(0, dtMs), get spring() { return devSpring; },
   get scroll() { return getScroll(); },   /* Lenis owns the scroll: drive it through here, not window.scrollTo */
