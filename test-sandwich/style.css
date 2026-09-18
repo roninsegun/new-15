@@ -62,7 +62,7 @@
   /* the serif at display size: the grotesk's −.05em is too tight for it */
   --ls-display-serif: -.02em;
   --lh-display-serif: .95;
-  --w-display-serif: 500;
+  --w-display-serif: 400;   /* Regular — one step down from Medium (Dmitriy) */
 
   /* hero grade tokens — the numbers the ?tune=1 panel (tune.js) turns; the
      defaults ARE the look, so fixing a setting = writing it here. Dmitriy's
