@@ -78,60 +78,71 @@
     </div>
   </section>
 
-  <!-- chapters I–IV: the coin walks the mosaic — plate left / text right, then
-       mirrored. The plates are in normal flow, so the fixed coin (z 5) sits on
-       top of them; main.js scrubs the coin's x between the plates' inner edges
-       and keeps it turning on every move. Plates reveal through the Undr Drift
-       rectangular mask (A5). Captions are lowercase — no caps. -->
+  <!-- chapters, mosaic 2.0: two icon-arch blocks. The poster word reveals by
+       chars, then a scrub shrinks it and docks it beside the text; the arch
+       reveals through the A5 mask; the cut-out figure overflows the arch frame
+       (z 6 — OVER the coin) with a whisper of parallax; the text block rides a
+       slight counter-speed. The coin (z 5) walks to each arch's inner edge as
+       before. Captions lowercase, the copperplate name plain white. -->
   <section class="chapters" data-chapters>
-    <article class="chapter">
-      <figure class="chapter__media reveal-image" data-plate data-scroll data-scroll-offset="25%" data-scroll-repeat>
-        <img src="../assets/img/chapters/1.webp" alt="A mint workshop: the bronze die, the burin, the hammer" loading="lazy">
-      </figure>
-      <div class="chapter__text" data-scroll data-scroll-offset="25%" data-scroll-repeat>
-        <h3 class="chapter__title t-display-serif" data-split="words" data-split-mask="words" data-scroll data-scroll-offset="25%" data-scroll-repeat>The only cut<br>the lion allowed</h3>
-        <p class="chapter__lead t-sublead">No blade had ever marked the lion. An apprentice's burin did — and the strike landed a little off centre.</p>
-        <p class="chapter__meta t-caption">Miletus · c. 350 BCE</p>
-        <p class="chapter__name script">Alexandros of Miletus</p>
+    <article class="chapter" data-block>
+      <h3 class="chapter__word t-display-serif" data-word data-split="chars" data-split-mask="chars" data-scroll data-scroll-offset="10%" data-scroll-repeat>Struck</h3>
+      <div class="chapter__grid">
+        <div class="chapter__archwrap">
+          <figure class="chapter__arch reveal-image" data-plate data-scroll data-scroll-offset="25%" data-scroll-repeat>
+            <img src="../assets/img/chapters/mint.webp" alt="A renaissance mint: the apprentice raises the hammer over the die">
+          </figure>
+          <img class="chapter__fig chapter__fig--mint" src="../assets/img/chapters/mint-fig.webp" alt="" data-scroll data-scroll-speed="-0.03">
+        </div>
+        <div class="chapter__text" data-dock-target data-scroll data-scroll-offset="25%" data-scroll-repeat data-scroll-speed="0.05">
+          <p class="chapter__lead t-sublead">No blade had ever marked the lion. An apprentice's burin did — and the strike landed a little off centre.</p>
+          <p class="chapter__meta t-caption">miletus · c. 350 bce</p>
+          <p class="chapter__name script">Alexandros of Miletus</p>
+        </div>
       </div>
     </article>
 
-    <article class="chapter chapter--flip">
-      <figure class="chapter__media reveal-image" data-plate data-scroll data-scroll-offset="25%" data-scroll-repeat>
-        <img src="../assets/img/chapters/2.webp" alt="The ferry at night: the gunwale, a bowl of pale coins, rope" loading="lazy">
-      </figure>
-      <div class="chapter__text" data-scroll data-scroll-offset="25%" data-scroll-repeat>
-        <h3 class="chapter__title t-display-serif" data-split="words" data-split-mask="words" data-scroll data-scroll-offset="25%" data-scroll-repeat>Short weight.<br>Thrown back.</h3>
-        <p class="chapter__lead t-sublead">The ferryman weighs every obol in the dark. A light coin does not cross — it goes back to the shore of the living.</p>
-        <p class="chapter__meta t-caption">The crossing · refused</p>
-        <p class="chapter__name script">Charon</p>
-      </div>
-    </article>
-
-    <article class="chapter">
-      <figure class="chapter__media reveal-image" data-plate data-scroll data-scroll-offset="25%" data-scroll-repeat>
-        <img src="../assets/img/chapters/3.webp" alt="The riverbed: silt, dark water, one faint glint" loading="lazy">
-      </figure>
-      <div class="chapter__text" data-scroll data-scroll-offset="25%" data-scroll-repeat>
-        <h3 class="chapter__title t-display-serif" data-split="words" data-split-mask="words" data-scroll data-scroll-offset="25%" data-scroll-repeat>Everyone forgot.<br>It didn't.</h3>
-        <p class="chapter__lead t-sublead">Eleven hundred years under the silt. The river forgets everything; copper keeps every scratch.</p>
-        <p class="chapter__meta t-caption">The riverbed · 1,100 years</p>
-        <p class="chapter__name script">Lethe</p>
-      </div>
-    </article>
-
-    <article class="chapter chapter--flip">
-      <figure class="chapter__media reveal-image" data-plate data-scroll data-scroll-offset="25%" data-scroll-repeat>
-        <img src="../assets/img/chapters/4.webp" alt="A matchbox on linen in morning light" loading="lazy">
-      </figure>
-      <div class="chapter__text" data-scroll data-scroll-offset="25%" data-scroll-repeat>
-        <h3 class="chapter__title t-display-serif" data-split="words" data-split-mask="words" data-scroll data-scroll-offset="25%" data-scroll-repeat>Spring<br>gave it back</h3>
-        <p class="chapter__lead t-sublead">A farmer's daughter, a matchbox under a pillow, the high points wearing smooth against a thumb.</p>
-        <p class="chapter__meta t-caption">Found in spring · 1911</p>
-        <p class="chapter__name script">Eleni Vassilaki</p>
+    <article class="chapter chapter--flip" data-block>
+      <h3 class="chapter__word t-display-serif" data-word data-split="chars" data-split-mask="chars" data-scroll data-scroll-offset="10%" data-scroll-repeat>Refused</h3>
+      <div class="chapter__grid">
+        <div class="chapter__archwrap">
+          <figure class="chapter__arch reveal-image" data-plate data-scroll data-scroll-offset="25%" data-scroll-repeat>
+            <img src="../assets/img/chapters/ferry.webp" alt="The ferryman presses the coin back into the traveller's palm">
+          </figure>
+          <img class="chapter__fig chapter__fig--ferry" src="../assets/img/chapters/ferry-fig.webp" alt="" data-scroll data-scroll-speed="-0.03">
+        </div>
+        <div class="chapter__text" data-dock-target data-scroll data-scroll-offset="25%" data-scroll-repeat data-scroll-speed="0.05">
+          <p class="chapter__lead t-sublead">The ferryman weighs every obol in the dark. Short weight does not cross — it goes back to the shore of the living.</p>
+          <p class="chapter__meta t-caption">the crossing · refused</p>
+          <p class="chapter__name script">Charon</p>
+        </div>
       </div>
     </article>
   </section>
+
+  <!-- the homage, "Return": a spacer drives the scrub; the visuals are fixed
+       siblings (the hero-planes architecture — no pin, the sandwich survives).
+       Phases: the fresco rises full-screen (z 6, the coin already waits hidden
+       behind it) → shrinks into a frame, the giant word surfacing from behind
+       its edges → the two arms part beyond the frame while the ground fades
+       and breaks into two halves → the coin is left face-on over the word,
+       corner captions come in. -->
+  <section class="homage" data-homage aria-label="Return"></section>
+  <div class="homage-word" aria-hidden="true"><span class="t-display-serif">Return</span></div>
+  <div class="homage-panel" aria-hidden="true">
+    <div class="homage-panel__box">
+      <div class="homage-panel__half homage-panel__half--l"><img src="../assets/img/chapters/homage-bg.webp" alt=""></div>
+      <div class="homage-panel__half homage-panel__half--r"><img src="../assets/img/chapters/homage-bg.webp" alt=""></div>
+      <img class="homage-panel__arm homage-panel__arm--l" src="../assets/img/chapters/homage-arm-l.webp" alt="">
+      <img class="homage-panel__arm homage-panel__arm--r" src="../assets/img/chapters/homage-arm-r.webp" alt="">
+    </div>
+  </div>
+  <div class="homage-caps t-caption" aria-hidden="true">
+    <span class="homage-caps__c homage-caps__c--tl">the riverbed · 1,100 years</span>
+    <span class="homage-caps__c homage-caps__c--tr">spring · 1911</span>
+    <span class="homage-caps__c homage-caps__c--bl">worn smooth against a thumb</span>
+    <span class="homage-caps__c homage-caps__c--br">three letters · unread</span>
+  </div>
 
   <script type="module" src="main.js"></script>
 </body>

@@ -93,6 +93,9 @@ const state = { frame: 0 };
 const targetFrame = () => Math.round(state.frame) % N;   /* the chapters walk keeps adding turns */
 const vh = (k) => () => innerHeight * k;   /* function values: re-read on every ScrollTrigger refresh */
 
+/* reduced motion: no parallax — strip the speed attributes BEFORE Locomotive
+   reads them at init */
+if (reduced) document.querySelectorAll('[data-scroll-speed]').forEach((el) => el.removeAttribute('data-scroll-speed'));
 initScroll();
 initSplit();
 initImageLoad();
@@ -140,16 +143,18 @@ if (reduced) {
     .fromTo(glow, { opacity: 1 }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.6);
 }
 
-/* ── chapters I–IV: the coin walks the mosaic ──
-   Four fromTo triggers, one per chapter: as a chapter scrolls in, the coin
-   flies to its plate's inner edge (right edge of a left plate, left edge of a
-   right one) and makes one full turn on the way, landing face-on for the
-   dwell. The zones never overlap (chapters are >100vh apart), so each trigger
-   owns its scrub range. A last trigger returns the coin to centre after IV.
-   Below 768px the anchors collapse to 0 — the coin stays centred over the
-   stacked plates. */
+/* ── mosaic 2.0 + the homage ──
+   Coin: two fromTo triggers walk it to each arch's inner edge with one full
+   turn per move, then a third brings it to centre as the homage spacer
+   arrives — where the fresco panel (z 6) covers it. Words: each block's
+   poster word, once revealed, scrubs down in scale and docks beside its text
+   column. Homage: one master scrub over the spacer — the panel rises
+   full-screen, shrinks into a frame (the giant word surfacing behind it),
+   the arms part beyond the frame, the ground fades and splits in two, and
+   the coin is left face-on over the word with the corner captions in. */
 const CH_SCALE = 0.46;
 const plates = gsap.utils.toArray('[data-plate]');
+const homage = document.querySelector('[data-homage]');
 if (!reduced && plates.length) {
   const plateX = (el) => () => {
     if (innerWidth < 768) return 0;
@@ -167,7 +172,7 @@ if (!reduced && plates.length) {
     .fromTo(canvas, vars.from, { ...vars.to, immediateRender: false }, 0);
   plates.forEach((plate, i) => {
     move(
-      { trigger: plate.closest('.chapter'), start: 'top 95%', end: 'top 40%' },
+      { trigger: plate.closest('.chapter__archwrap'), start: 'top 92%', end: 'top 45%' },
       {
         from: { x: i === 0 ? 0 : plateX(plates[i - 1]), scale: i === 0 ? SCALE_END : CH_SCALE },
         to: { x: plateX(plate), scale: CH_SCALE },
@@ -175,14 +180,64 @@ if (!reduced && plates.length) {
       [FACE + i * N, FACE + (i + 1) * N],   /* one full turn per move; % N in targetFrame */
     );
   });
-  /* the return zone hangs off the LAST chapter, not the section: the section's
-     bottom can never rise past the viewport bottom, so a section-bottom zone
-     would end stranded mid-move at max scroll (x froze at 115px) */
   move(
-    { trigger: plates[plates.length - 1].closest('.chapter'), start: 'bottom 85%', end: 'bottom 50%' },
+    { trigger: homage, start: 'top 95%', end: 'top 55%' },
     { from: { x: plateX(plates[plates.length - 1]), scale: CH_SCALE }, to: { x: 0, scale: SCALE_END } },
     [FACE + plates.length * N, FACE + (plates.length + 1) * N],
   );
+
+  /* poster words dock beside their text (Dmitriy: "заголовок уменьшается и
+     подъезжает к тексту"). natRect measures layout with the transform backed
+     out, so invalidateOnRefresh re-aims cleanly mid-scrub. */
+  const natRect = (el) => {
+    const t = el.style.transform;
+    el.style.transform = 'none';
+    const r = el.getBoundingClientRect();
+    el.style.transform = t;
+    return r;
+  };
+  const DOCK = 0.24;
+  document.querySelectorAll('[data-block]').forEach((block) => {
+    const word = block.querySelector('[data-word]');
+    const target = block.querySelector('[data-dock-target]');
+    const flip = block.classList.contains('chapter--flip');
+    gsap.set(word, { transformOrigin: flip ? 'left top' : 'right top' });
+    gsap.fromTo(word, { x: 0, y: 0, scale: 1 }, {
+      scale: DOCK,
+      x: () => { const w = natRect(word); const t = natRect(target); return flip ? t.left - w.left : t.right - w.right; },
+      y: () => { const w = natRect(word); const t = natRect(target); return t.top - w.top - w.height * DOCK - 20; },
+      ease: 'none',
+      scrollTrigger: { trigger: block.querySelector('.chapter__grid'), start: 'top 60%', end: 'top 8%', scrub: true, invalidateOnRefresh: true },
+    });
+  });
+
+  /* the homage master scrub (fractions of 10 units over the 340vh spacer) */
+  const box = document.querySelector('.homage-panel__box');
+  const halves = gsap.utils.toArray('.homage-panel__half');
+  const wordH = document.querySelector('.homage-word');
+  const caps = document.querySelector('.homage-caps');
+  const cover = () => 1.04 * Math.max(innerWidth / box.offsetWidth, innerHeight / box.offsetHeight);
+  gsap.timeline({
+    defaults: { ease: 'none' },
+    scrollTrigger: { trigger: homage, start: 'top bottom', end: 'bottom bottom', scrub: true, invalidateOnRefresh: true },
+  })
+    .fromTo('.homage-panel', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, 0)
+    .fromTo(box, { y: vh(1), scale: cover }, { y: vh(0.07), duration: 2 }, 0)   /* the frame sits a little low: the word's slot is above it */
+    .to({}, { duration: 1 }, 2)                                   /* full-screen hold */
+    .to(box, { scale: 1, duration: 2 }, 3)                        /* the frame */
+    .fromTo(wordH, { autoAlpha: 0, y: vh(0.3) }, { autoAlpha: 1, y: 0, duration: 1.8 }, 3.1)   /* climbs out from behind the panel */
+    .to('.homage-panel__arm--l', { xPercent: -165, rotation: -5, duration: 2.6 }, 5)
+    .to('.homage-panel__arm--r', { xPercent: 165, rotation: 5, duration: 2.6 }, 5)
+    .to(halves[0], { xPercent: -30, autoAlpha: 0, filter: 'blur(2px)', duration: 2 }, 5.8)
+    .to(halves[1], { xPercent: 30, autoAlpha: 0, filter: 'blur(2px)', duration: 2 }, 5.8)
+    .set('.homage-panel', { autoAlpha: 0 }, 8)
+    .fromTo(caps, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.8 }, 7.6)
+    .fromTo('.homage-caps__c', { y: 14, opacity: 0 }, { y: 0, opacity: 0.6, duration: 1.2, stagger: 0.15 }, 7.6)
+    .to({}, { duration: 1 }, 9);                                  /* end-state hold */
+} else if (reduced) {
+  /* the end-state poster, no phases */
+  gsap.set(['.homage-word', '.homage-caps'], { autoAlpha: 1 });
+  gsap.set('.homage-caps__c', { opacity: 0.6 });
 }
 
 /* ── the story flows around the coin (lib/flow-around.js) ── */
