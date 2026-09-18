@@ -18,6 +18,7 @@ import { gsap, ScrollTrigger, reduced } from '../lib/gsap.js';
 import { initScroll, onScroll, getScroll } from '../lib/scroll.js';
 import { initSplit } from '../lib/split.js';
 import { createFlow } from '../lib/flow-around.js';
+import { initImageLoad } from '../lib/reveal.js';
 
 const N = 120;
 const LOCAL = 'frames/';
@@ -89,11 +90,12 @@ for (let i = 0; i < N; i += 1) load(i);
 
 /* ── scroll + coin timeline ── */
 const state = { frame: 0 };
-const targetFrame = () => Math.round(state.frame);
+const targetFrame = () => Math.round(state.frame) % N;   /* the chapters walk keeps adding turns */
 const vh = (k) => () => innerHeight * k;   /* function values: re-read on every ScrollTrigger refresh */
 
 initScroll();
 initSplit();
+initImageLoad();
 /* Locomotive only classes [data-scroll] elements on its first scroll event;
    the screen-1 title is in view before any scroll, so mark it ourselves —
    two frames after fonts.ready, i.e. after lib/split.js has split it, so the
@@ -136,6 +138,51 @@ if (reduced) {
     .fromTo(frontR, { x: 0, y: 0 }, { x: vh(1), y: vh(1), duration: 1 }, 0)
     .fromTo(glow, { scale: 1 }, { scale: SCALE_MID, duration: 1 }, 0)
     .fromTo(glow, { opacity: 1 }, { opacity: 0, duration: 0.4, immediateRender: false }, 0.6);
+}
+
+/* ── chapters I–IV: the coin walks the mosaic ──
+   Four fromTo triggers, one per chapter: as a chapter scrolls in, the coin
+   flies to its plate's inner edge (right edge of a left plate, left edge of a
+   right one) and makes one full turn on the way, landing face-on for the
+   dwell. The zones never overlap (chapters are >100vh apart), so each trigger
+   owns its scrub range. A last trigger returns the coin to centre after IV.
+   Below 768px the anchors collapse to 0 — the coin stays centred over the
+   stacked plates. */
+const CH_SCALE = 0.46;
+const plates = gsap.utils.toArray('[data-plate]');
+if (!reduced && plates.length) {
+  const plateX = (el) => () => {
+    if (innerWidth < 768) return 0;
+    const r = el.getBoundingClientRect();
+    const centre = innerWidth / 2;
+    return ((r.left + r.right) / 2 < centre ? r.right : r.left) - centre;
+  };
+  const FACE = N - 1;                       /* frame 119: face-on, where the hero left it */
+  const move = (st, vars, frames) => gsap.timeline({
+    defaults: { ease: 'none' },
+    scrollTrigger: { scrub: true, invalidateOnRefresh: true, ...st },
+    onUpdate: () => drawFrame(targetFrame()),
+  })
+    .fromTo(state, { frame: frames[0] }, { frame: frames[1], immediateRender: false }, 0)
+    .fromTo(canvas, vars.from, { ...vars.to, immediateRender: false }, 0);
+  plates.forEach((plate, i) => {
+    move(
+      { trigger: plate.closest('.chapter'), start: 'top 95%', end: 'top 40%' },
+      {
+        from: { x: i === 0 ? 0 : plateX(plates[i - 1]), scale: i === 0 ? SCALE_END : CH_SCALE },
+        to: { x: plateX(plate), scale: CH_SCALE },
+      },
+      [FACE + i * N, FACE + (i + 1) * N],   /* one full turn per move; % N in targetFrame */
+    );
+  });
+  /* the return zone hangs off the LAST chapter, not the section: the section's
+     bottom can never rise past the viewport bottom, so a section-bottom zone
+     would end stranded mid-move at max scroll (x froze at 115px) */
+  move(
+    { trigger: plates[plates.length - 1].closest('.chapter'), start: 'bottom 85%', end: 'bottom 50%' },
+    { from: { x: plateX(plates[plates.length - 1]), scale: CH_SCALE }, to: { x: 0, scale: SCALE_END } },
+    [FACE + plates.length * N, FACE + (plates.length + 1) * N],
+  );
 }
 
 /* ── the story flows around the coin (lib/flow-around.js) ── */

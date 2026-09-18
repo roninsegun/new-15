@@ -70,6 +70,11 @@
   --step-word: 75ms;
   --split-mask-pad: .08em;
   --split-mask-bleed-y: .3em;
+
+  /* Undr Drift image-reveal tokens (new-12 A5), verbatim */
+  --ease-quart: cubic-bezier(.41, .35, .2, 1);
+  --dur-image: 1.2s;
+  --tint-image: color-mix(in oklab, var(--ink) 10%, transparent);
 }
 @media (min-width: 48rem) {
   :root {
@@ -139,7 +144,7 @@ body {
    mask, 75ms apart, once the title is in view. Everything animated lives
    INSIDE .line — the line itself and .title never get transform/opacity,
    so the z-index sandwich stays intact. */
-.title:where(html.js *):not(:has(.word)) .line { opacity: 0; }   /* no flash before SplitText runs (opacity on .line is safe) */
+:is(.title, .chapter__title):where(html.js *):not(:has(.word)) .line { opacity: 0; }   /* no flash before SplitText runs (opacity on .line is safe) */
 .word-mask {
   display: inline-block;
   padding-right: var(--split-mask-pad);
@@ -152,8 +157,8 @@ body {
   transition: transform var(--dur-word) var(--ease-out-expo);
   transition-delay: calc(var(--step-word) * var(--word, 0));
 }
-.title.is-inview .word { transform: translateY(0%); }
-.title:not(.is-inview) .word { transition-duration: 0s; transition-delay: 0s; }  /* instant reset out of view → replays */
+:is(.title, .chapter__title).is-inview .word { transform: translateY(0%); }
+:is(.title, .chapter__title):not(.is-inview) .word { transition-duration: 0s; transition-delay: 0s; }  /* instant reset out of view → replays */
 @media (prefers-reduced-motion: reduce) {
   .word { transition: none; transform: none; }
 }
@@ -255,4 +260,68 @@ body {
   font-size: 1.15em;
   line-height: .9;
   letter-spacing: 0;
+}
+
+/* ── chapters I–IV: the mosaic ──
+   Plates and text live in normal flow (z auto), so the fixed coin (z 5)
+   rides on top of the plates; nothing here carries a transform on an
+   ancestor of .line — the sandwich is untouched. The coin's walk between
+   the plates is scrubbed in main.js on the canvas itself. */
+.chapters { padding: 0 4vw 60vh; }   /* the tail: the return-to-centre move must fit before max scroll */
+.chapter {
+  display: grid;
+  grid-template-columns: minmax(0, 38vw) 1fr;
+  align-items: center;
+  gap: 8vw;
+  padding-block: 16vh;
+}
+.chapter__media {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  margin: 0;
+}
+.chapter__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.chapter__text { max-width: 34rem; }
+.chapter--flip { grid-template-columns: 1fr minmax(0, 38vw); }
+.chapter--flip .chapter__media { order: 2; }
+.chapter--flip .chapter__text { order: 1; justify-self: end; }
+.chapter__title { font-size: clamp(2.25rem, 4.6vw, 5rem); }
+.chapter__lead { margin-top: 1.5em; }
+.chapter__meta { margin-top: 2.2em; letter-spacing: .04em; opacity: .55; }   /* lowercase — no caps in captions */
+.chapter__name { font-size: var(--fs-sublead); margin-top: .9em; }
+
+/* text block reveal: keyed off the block's own .is-inview (Locomotive),
+   words handled by the split contract on the title itself */
+.chapter__text .chapter__lead, .chapter__text .chapter__meta, .chapter__text .chapter__name {
+  opacity: 0;
+  transition: opacity .9s var(--ease-quart);
+}
+.chapter__text.is-inview .chapter__lead { opacity: 1; transition-delay: .35s; }
+.chapter__text.is-inview .chapter__meta { opacity: .55; transition-delay: .5s; }
+.chapter__text.is-inview .chapter__name { opacity: 1; transition-delay: .6s; }
+
+/* ── Undr Drift A5: image behind a rectangular mask ──
+   tinted plate while loading; once .is-inview AND .is-loaded, the image
+   unmasks top-down and settles from a slight zoom. Class toggling (repeat)
+   replays the animation. */
+.reveal-image { background-color: var(--tint-image); overflow: hidden; }
+.reveal-image img { opacity: 0; }
+.reveal-image.is-inview.is-loaded img {
+  opacity: 1;
+  animation: reveal-clip var(--dur-image) var(--ease-quart) both;
+}
+@keyframes reveal-clip {
+  0%  { clip-path: inset(0 0 100%); transform: scale(1.1) translateY(-5%); }
+  to  { clip-path: inset(0);        transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-image img { animation: none !important; opacity: 1; }
+  .chapter__text .chapter__lead, .chapter__text .chapter__meta, .chapter__text .chapter__name { transition: none; opacity: 1; }
+  .chapter__text .chapter__meta { opacity: .55; }
+}
+
+@media (max-width: 47.99rem) {
+  .chapter, .chapter--flip { grid-template-columns: 1fr; gap: 8vw; padding-block: 10vh; }
+  .chapter__media, .chapter--flip .chapter__media { order: 1; width: 86vw; margin-inline: auto; }
+  .chapter__text, .chapter--flip .chapter__text { order: 2; justify-self: start; }
 }
