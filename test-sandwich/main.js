@@ -219,6 +219,12 @@ if (!reduced && plates.length) {
   };
   buildWalk();
   ScrollTrigger.addEventListener('refreshInit', buildWalk);
+  /* a refresh re-renders the scrubbed hero timeline AFTER refreshInit built
+     and rendered the walk — past its end it writes the canvas scale .5 and
+     frame 119 (the walk's own start state), so a refresh mid-walk (a resize,
+     the load event) would park the coin at the centre until the next scroll
+     tick moved the spring. Re-render the walk once the refresh is done. */
+  ScrollTrigger.addEventListener('refresh', () => { walk.render(walk.totalTime(), true, true); drawFrame(targetFrame()); });
   /* the follower: semi-implicit Euler on a critically damped spring */
   const omega = (2 * Math.PI) / SPRING_PERIOD;
   const follow = (time, deltaMs) => {

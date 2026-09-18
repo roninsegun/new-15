@@ -32,10 +32,10 @@
 - Логлайн: *One copper obol. Spent once, on the ferryman. It came back.*
 - Тон: музейная этикетка + миф. Короткие утверждения, конкретика; имена и даты —
   в Pinyon Script, как уже сделано в story.
-- Постер-тайтл экрана 1 (сэндвич: front-строка над монетой / back-строка за ней):
-  1. **Spent once. / Came back.** — рекомендую
-  2. One obol. / One crossing.
-  3. Struck by hand / in worn copper — текущий
+- Постер-тайтл экрана 1 (сэндвич: front-строка над монетой / back-строка за ней),
+  размером как слова-постеры глав (16vw): **Still / unspent.** — выбор Дмитрия
+  (18.09; «Spent once. / Came back.» отклонён как абстрактный). Запасные из
+  промера: Too light / for the dead. · Charon / refused. · Paid once. / Never spent.
 - Экран 2 — оставляем: **Turned by time / still turning**.
 - Подписи в хиро (t-meta): слева внизу `COPPER OBOL · MILETUS · 4TH C. BCE`,
   справа внизу `SCROLL TO TURN`.
