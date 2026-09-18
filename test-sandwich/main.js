@@ -13,7 +13,8 @@
      once and, every scroll frame, slides each line's two halves apart just
      enough to clear the coin silhouette (coin-shape.json, traced from frame
      119); no re-wrapping, nothing to animate — the motion is the scroll.
-   ?cdn=1 → frames from jsDelivr instead of ./frames/ (the CDN check). */
+   ?cdn=1 → frames from jsDelivr instead of ./frames/ (the CDN check);
+   ?tune=1 → the hero tuner panel (tune.js) over the grade / glow tokens. */
 import { gsap, ScrollTrigger, reduced } from '../lib/gsap.js';
 import { initScroll, onScroll, getScroll } from '../lib/scroll.js';
 import { initSplit } from '../lib/split.js';
@@ -348,9 +349,15 @@ addEventListener('resize', () => {
 });
 sizeCanvas();
 
+/* ?tune=1 — the hero tuner (tune.js + vendor/lil-gui): the grade of the
+   planes and the glow as live sliders over the CSS tokens. Nothing of it is
+   fetched without the flag. */
+let tune = null;
+if (q.get('tune') === '1') import('./tune.js').then((m) => m.initTune()).then((gui) => { tune = gui; });
+
 /* dev handle */
 window.__test = {
-  frames, state, updateFlow, get flow() { return flow; },
+  frames, state, updateFlow, get flow() { return flow; }, get tune() { return tune; },
   get loaded() { return loaded; },
   get current() { return current; },
   get scale() { return gsap.getProperty(canvas, 'scale'); },

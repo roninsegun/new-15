@@ -64,6 +64,14 @@
   --lh-display-serif: .95;
   --w-display-serif: 500;
 
+  /* hero grade + glow tokens — the numbers the ?tune=1 panel (tune.js)
+     turns; the defaults ARE the look, so fixing a setting = writing it here.
+     Temperature / tint are not tokens: they live in the tuner's SVG matrix
+     and get baked into the WebPs (tools/hero-layers.py) once chosen. */
+  --hero-sat: 1; --hero-bri: 1; --hero-con: 1;                  /* all four planes */
+  --hero-back-bri: 1; --hero-fade-a: 30%; --hero-fade-b: 62%;    /* the far bank: its own brightness + the two stops of its top fade */
+  --glow-rgb: 214 168 72; --glow-a: .26; --glow-k: 1.6; --glow-core: 0%;   /* old gold · alpha · diameter × the coin box · solid core */
+
   /* Undr Drift reveal tokens, verbatim */
   --ease-out-expo: cubic-bezier(.19, 1, .22, 1);
   --dur-word: 1.6s;
@@ -192,13 +200,20 @@ body {
    the back plane is overscanned for its drift. */
 .plane { position: fixed; inset: 0; pointer-events: none; will-change: transform, opacity; }   /* no overflow clip: the clip would ride along with the drift and expose the body */
 .plane img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+/* the grade: accelerated CSS filters from the tokens (planes are leaves of
+   the root stacking context — a filter on their img cannot touch the
+   sandwich). Under the tuner, temperature/tint prepend an SVG matrix. */
+.plane img { filter: saturate(var(--hero-sat)) brightness(var(--hero-bri)) contrast(var(--hero-con)); }
+html.is-tuning .plane img { filter: url(#hero-grade) saturate(var(--hero-sat)) brightness(var(--hero-bri)) contrast(var(--hero-con)); }
 .plane--back  { z-index: 1; }
 .plane--back img {
   transform: scale(1.2);
+  filter: saturate(var(--hero-sat)) brightness(calc(var(--hero-bri) * var(--hero-back-bri))) contrast(var(--hero-con));
   /* Dmitriy: black at the very top, the far bank surfacing towards the bottom */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.25) 30%, #000 62%);
-  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.25) 30%, #000 62%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.25) var(--hero-fade-a), #000 var(--hero-fade-b));
+  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.25) var(--hero-fade-a), #000 var(--hero-fade-b));
 }
+html.is-tuning .plane--back img { filter: url(#hero-grade) saturate(var(--hero-sat)) brightness(calc(var(--hero-bri) * var(--hero-back-bri))) contrast(var(--hero-con)); }
 .plane--mid   { z-index: 3; }
 .plane--front { z-index: 7; }
 /* per-plane framing (Dmitriy): the isolations stop short of the frame, so the
@@ -228,11 +243,14 @@ body {
    Old-gold haze behind the brass coin — low alpha so it reads dirty and
    painterly, not like a lamp (Dmitriy) */
 .stage__glow {
-  width: min(89.6vh, 89.6vw);
-  height: min(89.6vh, 89.6vw);
+  width: calc(min(56vh, 56vw) * var(--glow-k));
+  height: calc(min(56vh, 56vw) * var(--glow-k));
   border-radius: 50%;
-  background: radial-gradient(circle closest-side, rgba(214, 168, 72, .26), rgba(214, 168, 72, 0));   /* old gold, low — a dirty haze, not a lamp (Dmitriy) */
+  background: radial-gradient(circle closest-side, rgb(var(--glow-rgb) / var(--glow-a)) var(--glow-core), rgb(var(--glow-rgb) / 0));   /* old gold, low — a dirty haze, not a lamp (Dmitriy) */
 }
+
+/* ?tune=1 — the lil-gui panel (tune.js) sits under the header, off the nav */
+.lil-gui.autoPlace { top: 112px; right: 4vw; --width: 260px; --font-size: 11px; --input-font-size: 11px; }
 
 .progress { text-transform: uppercase; letter-spacing: .12em; opacity: .5; }
 .progress { position: absolute; left: 0; right: 0; bottom: 24px; text-align: center; }
