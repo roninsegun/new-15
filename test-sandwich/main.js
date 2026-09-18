@@ -1,8 +1,9 @@
 /* Sandwich test, scene 3 — the new-14 stack (GSAP 3.13 + Locomotive 5/Lenis).
    - coin: 120 alpha-WebP frames on the fixed canvas, one scrubbed timeline
-     (frames 0→119 over 0→150vh; scale 1→.6 by 100vh, →.5 by 150vh), then
-     frozen face-on at the centre for the rest of the page; every frame is
-     graded to the painting's copper on the canvas;
+     (frames 0→119 over 0→150vh; the THROW: scale .5 → 1 by 45vh → .5 by
+     100vh — the ferryman tossed it, it comes at you and drops back to the
+     size it keeps for the rest of the page, Dmitriy), then face-on at the
+     centre until the chapters;
    - hero painting: three fixed planes around the coin ride the same scrub
      over 0→100vh — the scene lets go of the coin (docs/concept.md
      storyboard): the shore figures leave faster than the scroll, the boat
@@ -34,8 +35,9 @@ const FRAMES_V = '2';      /* bump when frames/ changes under the same names (ca
 
 /* ── choreography constants (fractions of the viewport height) ── */
 const TURN_END = 1.5;     // frames 0→119 finish here
-const SCALE_MID = 0.6;    // at 1vh
-const SCALE_END = 0.5;    // at 1.5vh, then frozen
+const THROW_PEAK = 0.45;  // the throw: scale SCALE_END → 1 by here …
+const THROW_END = 1.0;    // … and back to SCALE_END by here (where it drops into the second title)
+const SCALE_END = 0.5;    // the coin's size for the rest of the page (the hero starts at it too)
 const TINT = null;        // copper grade multiplied over every frame: '#ff9c55' (the painting's copper lifted ×1.15) — off, Dmitriy: "как печенька"
 
 const canvas = document.getElementById('coin');
@@ -128,8 +130,9 @@ if (reduced) {
   /* fromTo everywhere: with invalidateOnRefresh a plain .to() would re-read
      its start value from wherever the scroll happens to be at refresh time */
   tl.fromTo(state, { frame: 0 }, { frame: N - 1, duration: TURN_END }, 0)
-    .fromTo(canvas, { scale: 1 }, { scale: SCALE_MID, duration: 1 }, 0)
-    .fromTo(canvas, { scale: SCALE_MID }, { scale: SCALE_END, duration: TURN_END - 1, immediateRender: false }, 1)
+    /* the throw: out at the viewer, slowing at the apex, then it drops back */
+    .fromTo(canvas, { scale: SCALE_END }, { scale: 1, duration: THROW_PEAK, ease: 'sine.out' }, 0)
+    .fromTo(canvas, { scale: 1 }, { scale: SCALE_END, duration: THROW_END - THROW_PEAK, ease: 'sine.inOut', immediateRender: false }, THROW_PEAK)
     /* the painting, 0→1vh — rates are fractions of the scroll distance:
        front planes leave at 1× sideways + 1× down (1.4× along the diagonal),
        the boat casts off to the RIGHT (.35×) and only a little up (.07×) while
@@ -149,13 +152,16 @@ if (reduced) {
    damped spring on the ticker carries the timeline to it — the coin
    accelerates and brakes in a bell, so a wheel flick makes it glide, not
    leap (Emil: springs feel natural because they simulate physics; the
-   default scrub catch-up is expo-out and starts with a jolt). Inside: the
-   frames turn continuously (landing face-on: whole turns); every move to an
-   arch centre rides power2.inOut with a slight lift, shrinking to half over
-   the arch and back to full as the arch's bottom passes the coin; then to
-   centre before the fresco rises. */
+   default scrub catch-up is expo-out and starts with a jolt). Inside
+   (Dmitriy): ONE full turn from the story's tail to the first arch, where
+   the coin HOLDS face-on; one full turn to the second arch, held face-on
+   again; after that it just keeps turning with the scroll to the end (whole
+   turns, so it ends face-on). Every move to an arch centre rides
+   power2.inOut with a slight lift, shrinking to half over the arch and back
+   to full as the arch's bottom passes the coin; then to centre before the
+   fresco rises. */
 const ARCH_SCALE = SCALE_END * 0.5;       /* −50 % over an arch */
-const TURN_VH = 1.5;                      /* one full turn per 1.5 viewport heights of scroll */
+const TURN_VH = 1.5;                      /* the free run after the last arch: one full turn per 1.5 viewport heights */
 const LIFT_VH = 0.04;                     /* the arc of a move: up 4vh at its middle */
 const SPRING_PERIOD = 1.3;                /* s — the follower's natural period (ζ = 1, no overshoot) */
 const MAX_VH_PER_S = 1.2;                 /* the follower never runs the choreography faster than this (a wheel flick → a stately glide) */
@@ -177,14 +183,12 @@ if (!reduced && plates.length) {
   const buildWalk = () => {
     if (walk) walk.kill();
     const vh = innerHeight;
-    const S0 = docTop(chapters) - 0.8 * vh;
+    const S0 = docTop(chapters) - 0.5 * vh;   /* = the story's tail (50vh) has just left: the turn starts after the text, not over it */
     const S1 = docTop(homage) + homage.offsetHeight - vh;
     const D = S1 - S0;
     range.s0 = S0; range.d = D;
     const at = (docY, frac) => docY - frac * vh - S0;   /* timeline time of "docY at viewport fraction frac" */
-    const turns = Math.max(1, Math.round(D / (vh * TURN_VH)));
     walk = gsap.timeline({ paused: true, defaults: { ease: 'none', immediateRender: false } });
-    walk.fromTo(state, { frame: FACE }, { frame: FACE + turns * N, duration: D }, 0);
     const move = (t0, t1, x0, x1) => {
       const d = t1 - t0;
       walk.fromTo(canvas, { x: x0 }, { x: x1, duration: d, ease: 'power2.inOut' }, t0)
@@ -193,21 +197,36 @@ if (!reduced && plates.length) {
     };
     let x = 0;
     let prevLeaveEnd = -Infinity;
+    const holds = [];   /* per arch: [docked, leaving] — the coin is face-on and still in between */
     plates.forEach((plate) => {
       const wrap = plate.closest('.chapter__archwrap');
       const wt = docTop(wrap);
       const wb = wt + wrap.offsetHeight;
       const cx = centreX(plate);
-      /* approach: long and early, but never before the previous arch's leave has finished */
-      const a0 = Math.max(at(wt, 0.75), prevLeaveEnd + 0.02 * vh); const a1 = at(wt, 0.08);
+      /* approach: long and early, but never before the previous arch's leave has
+         finished — and never before the walk itself starts (a negative position
+         would make GSAP shift the whole timeline and misalign it with the scroll) */
+      const a0 = Math.max(at(wt, 0.75), prevLeaveEnd + 0.02 * vh, 0); const a1 = at(wt, 0.08);
       move(a0, a1, x, cx);
       walk.fromTo(canvas, { scale: SCALE_END }, { scale: ARCH_SCALE, duration: a1 - a0, ease: 'power2.inOut' }, a0);
       /* leave: the arch's bottom passes the coin (viewport centre) — back to full */
       const l0 = at(wb, 0.72); const l1 = at(wb, 0.4);
       walk.fromTo(canvas, { scale: ARCH_SCALE }, { scale: SCALE_END, duration: l1 - l0, ease: 'power2.inOut' }, l0);
+      holds.push([a1, l0]);
       prevLeaveEnd = l1;
       x = cx;
     });
+    /* the turns: exactly one per leg (story → arch 1, arch 1 → arch 2), each
+       landing face-on as the coin docks; nothing in between (the hold); then
+       a free run to the end at TURN_VH, in whole turns */
+    let t = 0;
+    holds.forEach(([docked, leaving]) => {
+      walk.fromTo(state, { frame: FACE }, { frame: FACE + N, duration: Math.max(1, docked - t) }, t);
+      t = leaving;
+    });
+    const rest = Math.max(1, D - t);
+    const turns = Math.max(1, Math.round(rest / (vh * TURN_VH)));
+    walk.fromTo(state, { frame: FACE }, { frame: FACE + turns * N, duration: rest }, t);
     /* re-centre BEFORE the fresco rises (the homage master starts at 'top 80%') */
     const ht = docTop(homage);
     move(at(ht, 0.98), at(ht, 0.8), x, 0);
@@ -224,7 +243,10 @@ if (!reduced && plates.length) {
      frame 119 (the walk's own start state), so a refresh mid-walk (a resize,
      the load event) would park the coin at the centre until the next scroll
      tick moved the spring. Re-render the walk once the refresh is done. */
-  ScrollTrigger.addEventListener('refresh', () => { walk.render(walk.totalTime(), true, true); drawFrame(targetFrame()); });
+  ScrollTrigger.addEventListener('refresh', () => {
+    if (spring.cur <= 0) return;   /* still in the hero: its own scrub owns the canvas — a forced render at 0 would clobber it */
+    walk.render(walk.totalTime(), true, true); drawFrame(targetFrame());
+  });
   /* the follower: semi-implicit Euler on a critically damped spring */
   const omega = (2 * Math.PI) / SPRING_PERIOD;
   const follow = (time, deltaMs) => {
@@ -243,44 +265,21 @@ if (!reduced && plates.length) {
   gsap.ticker.add(follow);
   devFollow = follow; devSpring = spring;
 
-  /* the SECOND poster word docks beside its text (the first stays centred —
-     Dmitriy). Alignment is measured on the GLYPHS (first/last char masks),
-     not the full-width centred H3 box, with the word's transform backed out. */
-  const DOCK = 0.24;
-  document.querySelectorAll('[data-block].chapter--flip').forEach((block) => {
-    const word = block.querySelector('[data-word]');
-    const target = block.querySelector('[data-dock-target]');
-    gsap.set(word, { transformOrigin: 'left top' });
-    const rects = () => {
-      const t = word.style.transform;
-      word.style.transform = 'none';
-      const masks = word.querySelectorAll('.char-mask');
-      const g0 = (masks[0] || word).getBoundingClientRect();
-      const w = word.getBoundingClientRect();
-      const tr = target.getBoundingClientRect();
-      word.style.transform = t;
-      return { w, tr, gLeft: g0.left, gTop: g0.top, gH: g0.height };
-    };
-    gsap.fromTo(word, { x: 0, y: 0, scale: 1 }, {
-      scale: DOCK,
-      /* glyph left lands ON the text's left edge; glyph top sits 20px above it */
-      x: () => { const r = rects(); return r.tr.left - (r.w.left + (r.gLeft - r.w.left) * DOCK); },
-      y: () => { const r = rects(); return (r.tr.top - r.gH * DOCK - 20) - (r.w.top + (r.gTop - r.w.top) * DOCK); },
-      ease: 'none',
-      scrollTrigger: { trigger: block.querySelector('.chapter__grid'), start: 'top 60%', end: 'top 8%', scrub: true, invalidateOnRefresh: true },
-    });
-  });
+  /* (both poster words stay centred and static — the second one's shrink-and-
+     dock scrub overlapped its text and is gone, Dmitriy) */
 
   /* ── the homage master scrub (units of 10 over the 380vh spacer) ──
      rise full-screen (the arms ride along) → hold → the ground shrinks into
-     the frame while the arms HOLD their big scale and slowly lead away from
-     the coin → the halves split and die (blur) → the coin keeps turning
-     through it → the word plays its char reveal (class toggle, free of the
-     scrub) → the two bottom captions. */
+     the frame while the arms part QUICKLY to a finger's breadth (Dmitriy's
+     screenshot: the fingertips ~12vw apart), then only drift → the arms open
+     further and, with the coin showing between the fingertips, the ground
+     goes through a heavy blur, darkens and breaks in two — much later than
+     before → the coin keeps turning through it → the word plays its char
+     reveal (class toggle, free of the scrub) → the two bottom captions. */
   const box = document.querySelector('.homage-panel__box');
   const halves = gsap.utils.toArray('.homage-panel__half');
   const arms = document.querySelector('.homage-arms');
-  const wordH = document.querySelector('[data-hword]');
+  const wordH = gsap.utils.toArray('[data-hword]');   /* the two twins (line 1 behind the coin, line 2 over it) */
   const caps = document.querySelector('.homage-caps');
   const cover = () => 1.04 * Math.max(innerWidth / box.offsetWidth, innerHeight / box.offsetHeight);
   gsap.timeline({
@@ -288,7 +287,7 @@ if (!reduced && plates.length) {
     scrollTrigger: {
       trigger: homage, start: 'top 80%', end: 'bottom bottom', scrub: true, invalidateOnRefresh: true,
       onUpdate: (self) => {
-        wordH.classList.toggle('is-active', self.progress > 0.66);   /* plays its own 1.6s reveal, replays backwards */
+        wordH.forEach((el) => el.classList.toggle('is-active', self.progress > 0.7));   /* plays its own 1.6s reveal, replays backwards */
       },
     },
   })
@@ -297,18 +296,26 @@ if (!reduced && plates.length) {
     .fromTo(arms, { y: vh(1) }, { y: 0, duration: 1.8 }, 0)                      /* the arms arrive with the painting */
     .to({}, { duration: 0.8 }, 1.8)                                              /* full-screen hold */
     .to(box, { scale: 1, y: vh(0.07), duration: 1.8 }, 2.6)                      /* the ground pulls back into the frame */
-    .to('.homage-arms__l', { x: () => -innerWidth * 0.58, duration: 3.4 }, 3)    /* the arms stay BIG and slowly lead away */
-    .to('.homage-arms__r', { x: () => innerWidth * 0.58, duration: 3.4 }, 3)
-    .to(halves[0], { xPercent: -30, autoAlpha: 0, filter: 'blur(2px)', duration: 1.6 }, 4.6)
-    .to(halves[1], { xPercent: 30, autoAlpha: 0, filter: 'blur(2px)', duration: 1.6 }, 4.6)
-    .to(arms, { autoAlpha: 0, duration: 0.8 }, 5.9)                              /* руки исчезли */
-    .set('.homage-panel', { autoAlpha: 0 }, 6.4)
-    .fromTo(caps, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, 7.2)
-    .fromTo('.homage-caps__c', { y: 14, opacity: 0 }, { y: 0, opacity: 0.6, duration: 1, stagger: 0.2 }, 7.2)
-    .to({}, { duration: 1 }, 9);                                                 /* end-state hold */
+    /* the arms stay BIG; three beats: A — quick, to a finger's breadth (±5vw
+       → the fingertips ~12vw apart) · B — a slow drift while the ground
+       settles into its frame · C — open wide, the coin (~15vw) showing between */
+    .to('.homage-arms__l', { x: () => -innerWidth * 0.05, duration: 1, ease: 'power2.out' }, 3)
+    .to('.homage-arms__r', { x: () => innerWidth * 0.05, duration: 1, ease: 'power2.out' }, 3)
+    .to('.homage-arms__l', { x: () => -innerWidth * 0.10, duration: 2.4 }, 4)
+    .to('.homage-arms__r', { x: () => innerWidth * 0.10, duration: 2.4 }, 4)
+    .to('.homage-arms__l', { x: () => -innerWidth * 0.45, duration: 1.8, ease: 'power1.in' }, 6.4)
+    .to('.homage-arms__r', { x: () => innerWidth * 0.45, duration: 1.8, ease: 'power1.in' }, 6.4)
+    /* the ground goes only now — heavy blur, darkens, breaks in two (Dmitriy: much later, strong) */
+    .to(halves[0], { xPercent: -20, autoAlpha: 0, filter: 'blur(20px)', duration: 1.4 }, 6.6)
+    .to(halves[1], { xPercent: 20, autoAlpha: 0, filter: 'blur(20px)', duration: 1.4 }, 6.6)
+    .to(arms, { autoAlpha: 0, duration: 0.8 }, 7.8)                              /* руки исчезли */
+    .set('.homage-panel', { autoAlpha: 0 }, 8)
+    .fromTo(caps, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, 8.6)
+    .fromTo('.homage-caps__c', { y: 14, opacity: 0 }, { y: 0, opacity: 0.6, duration: 1, stagger: 0.2 }, 8.6)
+    .to({}, { duration: 0.4 }, 9.6);                                               /* end-state hold */
 } else if (reduced) {
   /* the end-state poster, no phases */
-  document.querySelector('[data-hword]').classList.add('is-active');
+  document.querySelectorAll('[data-hword]').forEach((el) => el.classList.add('is-active'));
   gsap.set('.homage-caps', { autoAlpha: 1 });
   gsap.set('.homage-caps__c', { opacity: 0.6 });
 }

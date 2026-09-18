@@ -229,7 +229,7 @@ html.is-tuning .plane img { filter: url(#hero-grade) saturate(var(--hero-sat)) b
 #coin {
   width: min(47.6vh, 47.6vw);    /* 56 × .85 — Dmitriy: the coin 15 % smaller, everywhere (the whole walk scales from this box) */
   height: min(47.6vh, 47.6vw);
-  /* scale is scrubbed by scroll in main.js (GSAP writes the transform): 1 → .6 → .5 */
+  /* scale is scrubbed by scroll in main.js (GSAP writes the transform): the throw .5 → 1 → .5 */
   transform-origin: center;
 }
 /* ?tune=1 — the lil-gui panel (tune.js) sits under the header, off the nav */
@@ -242,7 +242,7 @@ html.is-tuning .plane img { filter: url(#hero-grade) saturate(var(--hero-sat)) b
 /* ── the story: flows around the fixed coin ──
    .story and .story__col stay stacking-context-free (no transform/opacity):
    the coin (z 5) paints over the text (z auto) like a real object on top. */
-.story { padding: 0 4vw 100vh; }   /* the tail must clear the coin (the wrap makes the paragraph ~25% taller) */
+.story { padding: 0 4vw 50vh; }   /* the tail clears the coin, then the chapters follow soon (Dmitriy: the old 100vh gap was a dead scroll) */
 .story__col {
   display: flow-root;          /* contains the floats */
   max-width: 56rem;
@@ -290,8 +290,6 @@ html.is-tuning .plane img { filter: url(#hero-grade) saturate(var(--hero-sat)) b
   --split-mask-bleed-y: .5em;       /* poster-size serifs need more headroom than body words */
   text-align: center;
   margin-bottom: -.28em;            /* the arch climbs into the word, Hello-Dolly style */
-  transform-origin: left top;       /* the dock scrub scales towards the text column */
-  will-change: transform;
 }
 .chapter__grid {
   display: grid;
@@ -331,10 +329,11 @@ html.is-tuning .plane img { filter: url(#hero-grade) saturate(var(--hero-sat)) b
   margin-top: calc(var(--t, 0%) - var(--arch-top, 0%));
 }
 .arch-mid { z-index: 2; pointer-events: none; }
-/* reveals: the bg clip plays the A5 mask; the mid and front fade in behind it */
-.arch-clip--front img, .arch-mid { opacity: 0; transition: opacity .9s var(--ease-quart); }
-.chapter__archwrap.is-inview .arch-mid { opacity: 1; transition-delay: .5s; }
-.chapter__archwrap.is-inview .arch-clip--front img { opacity: 1; transition-delay: .35s; }
+/* the ground at half strength over a black plate, so the figures read
+   (Dmitriy); the plate is never seen — the curtain below covers the icon
+   until the reveal */
+.arch-clip--bg { background: #000; }
+.arch-clip--bg img { opacity: .5; }
 /* the coin's anchor: the arch centre (main.js reads [data-plate] = .arch-clip--bg) */
 .chapter__text { max-width: 30rem; position: relative; z-index: 2; }
 .chapter__lead { }
@@ -366,21 +365,25 @@ html.is-tuning .plane img { filter: url(#hero-grade) saturate(var(--hero-sat)) b
    corner captions 7. Each fixed wrapper is its own stacking context; GSAP
    fades them in/out around the spacer's range. */
 .homage { height: 380vh; }
-/* the word appears AFTER the painting is gone — the reveal-words contract
-   (chars rise out of masks), keyed to .is-active toggled by the master scrub */
+/* the two-line word ("It came / back.", Dmitriy) appears as the painting goes
+   — the reveal-words contract (chars rise out of masks), keyed to .is-active
+   toggled by the master scrub; centred on the screen, the coin over it */
 .homage-word {
-  position: fixed; inset: 0; z-index: 4; pointer-events: none;
-  display: grid; justify-items: center; align-items: start;
-  padding-top: 10vh;
+  position: fixed; inset: 0; pointer-events: none;
+  display: grid; align-content: center; justify-items: center;
   visibility: hidden;
 }
+.homage-word--back  { z-index: 4; }   /* line 1 behind the coin */
+.homage-word--front { z-index: 6; }   /* line 2 over it (after the panel and the arms in the DOM) */
+.homage-word__line--ghost { visibility: hidden; }   /* the twin's other line: same box, never seen */
 .homage-word.is-active { visibility: visible; }
-.homage-word span { font-size: clamp(6rem, 17vw, 17rem); line-height: .9; --split-mask-bleed-y: .5em; }
+.homage-word__line { display: block; text-align: center; font-size: clamp(6rem, 17vw, 17rem); line-height: .9; --split-mask-bleed-y: .5em; }
+.homage-word__line--2 { --char-offset: 7; }   /* the second line's chars follow the first's (7 chars in "It came") */
 .homage-word .char {
   display: inline-block;
   transform: translateY(130%);
   transition: transform var(--dur-word) var(--ease-out-expo);
-  transition-delay: calc(35ms * var(--char, 0));
+  transition-delay: calc(35ms * (var(--char, 0) + var(--char-offset, 0)));
 }
 .homage-word.is-active .char { transform: translateY(0%); }
 .homage-word:not(.is-active) .char { transition-duration: 0s; transition-delay: 0s; }
@@ -415,22 +418,32 @@ html.is-tuning .plane img { filter: url(#hero-grade) saturate(var(--hero-sat)) b
 .homage-caps__c--bl { bottom: 40px; left: 4vw; }
 .homage-caps__c--br { bottom: 40px; right: 4vw; }
 
-/* ── Undr Drift A5: image behind a rectangular mask ──
-   tinted plate while loading; once .is-inview AND .is-loaded, the image
-   unmasks top-down and settles from a slight zoom. Class toggling (repeat)
-   replays the animation. */
-.reveal-image { background-color: var(--tint-image); overflow: hidden; }
-.reveal-image img { opacity: 0; }
-.reveal-image.is-inview.is-loaded img {
-  opacity: 1;
-  animation: reveal-clip var(--dur-image) var(--ease-quart) both;
+/* ── the icon's reveal: Undr Drift A5 on the WHOLE icon ──
+   one curtain, top-down, over the ground and both figures at once (the
+   breakout included — the wrap is clipped, never overflow-hidden); the
+   ground alone settles from a slight zoom (the breakout carries Locomotive's
+   inline parallax transform, so it is not animated). Plays once the wrap is
+   .is-inview AND .is-loaded (all three images in — lib/reveal.js); class
+   toggling (repeat) replays it. .9s: quick enough not to read as loading
+   (Dmitriy), and it starts early (data-scroll-offset 12%). */
+/* the curtain is wider than the wrap (negative insets: 15 % above, 25 % to
+   the left, 5 % right/below) so the breakout — the boy past the left edge,
+   the ferryman's head over the top — is never cut; the band starts as a
+   zero-height line above everything */
+.reveal-image { clip-path: inset(-15% -5% 115% -25%); }
+.reveal-image.is-inview.is-loaded { animation: reveal-wipe .9s var(--ease-quart) both; }
+.reveal-image.is-inview.is-loaded .arch-clip--bg img { animation: reveal-settle .9s var(--ease-quart) both; }
+@keyframes reveal-wipe {
+  0%  { clip-path: inset(-15% -5% 115% -25%); }
+  to  { clip-path: inset(-15% -5% -5% -25%); }
 }
-@keyframes reveal-clip {
-  0%  { clip-path: inset(0 0 100%); transform: scale(1.1) translateY(-5%); }
-  to  { clip-path: inset(0);        transform: scale(1); }
+@keyframes reveal-settle {
+  0%  { transform: scale(1.08) translateY(-3%); }
+  to  { transform: scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .reveal-image img { animation: none !important; opacity: 1; }
+  .reveal-image { clip-path: none; animation: none !important; }
+  .reveal-image .arch-clip--bg img { animation: none !important; }
   .chapter__text .chapter__lead, .chapter__text .chapter__meta, .chapter__text .chapter__name { transition: none; opacity: 1; }
   .chapter__text .chapter__meta { opacity: .55; }
   .chapter__word .char, .homage-word .char { transition: none; transform: none; }

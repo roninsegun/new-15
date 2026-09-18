@@ -54,11 +54,11 @@
   </div>
 
   <section class="screen">
-    <!-- poster size (the chapters' word), the sandwich as before: the first
-         line over the coin, the second behind it. Dmitriy: "Still / unspent." -->
+    <!-- poster size (the chapters' word); the sandwich: the first line BEHIND
+         the coin, the second OVER it (Dmitriy). "Still / unspent." -->
     <h1 class="title title--poster t-display-serif" data-split="words" data-split-mask="words" data-scroll data-scroll-offset="30%" data-scroll-repeat>
-      <span class="line front">Still</span>
-      <span class="line back">unspent.</span>
+      <span class="line back">Still</span>
+      <span class="line front">unspent.</span>
     </h1>
   </section>
 
@@ -80,11 +80,14 @@
   </section>
 
   <!-- chapters, mosaic 2.0: two icon-arch blocks. The poster word reveals by
-       chars, then a scrub shrinks it and docks it beside the text; the arch
-       reveals through the A5 mask; the cut-out figure overflows the arch frame
-       (z 6 — OVER the coin) with a whisper of parallax; the text block rides a
-       slight counter-speed. The coin (z 5) walks to each arch's inner edge as
-       before. Captions lowercase, the copperplate name plain white. -->
+       chars and stays centred (no shrink/dock — Dmitriy); the whole icon
+       (ground + both figures) wipes in top-down as ONE curtain (.reveal-image
+       on the wrap: .is-inview + .is-loaded once all three images are in); the
+       breakout figure overflows the arch frame and rides a bold parallax
+       (+.12 of the viewport over its pass), the front figure a bolder one
+       (+.2) — nearer planes move faster, the ground stays (Dmitriy: make the
+       amplitude obvious); the text block rides a slight counter-speed. The coin (z 5) walks to each
+       arch's centre. Captions lowercase, the copperplate name plain white. -->
   <section class="chapters" data-chapters>
     <article class="chapter" data-block>
       <h3 class="chapter__word t-display-serif" data-word data-split="chars" data-split-mask="chars" data-scroll data-scroll-offset="10%" data-scroll-repeat>Struck</h3>
@@ -97,16 +100,16 @@
              (z2) unclipped between them. Each layer is placed by --l/--t/--w
              (% of the canvas width, --t from the canvas top) — numbers from
              tools/arch-layout.py, solved against Dmitriy's Figma frames. -->
-        <div class="chapter__archwrap" data-scroll data-scroll-offset="25%" data-scroll-repeat>
-          <div class="arch-clip arch-clip--bg reveal-image" data-plate data-scroll data-scroll-offset="25%" data-scroll-repeat>
-            <img src="../assets/img/arches/mint-bg.webp" style="--l:0%;--t:0%;--w:100%" alt="The mint workshop">
+        <div class="chapter__archwrap reveal-image" data-scroll data-scroll-offset="12%" data-scroll-repeat>
+          <div class="arch-clip arch-clip--bg" data-plate>
+            <img src="../assets/img/arches/mint-bg.webp" style="--l:0%;--t:0%;--w:100%" alt="The mint workshop" decoding="async">
           </div>
-          <img class="arch-mid" src="../assets/img/arches/mint-mid.webp" style="--l:-21.75%;--t:0.07%;--w:101.92%" alt="The apprentice swings the hammer" data-scroll data-scroll-speed="-0.05">
+          <img class="arch-mid" src="../assets/img/arches/mint-mid.webp" style="--l:-21.75%;--t:0.07%;--w:101.92%" alt="The apprentice swings the hammer" decoding="async" data-scroll data-scroll-speed="0.12">
           <div class="arch-clip arch-clip--front">
-            <img src="../assets/img/arches/mint-front.webp" style="--l:-5.85%;--t:-39.16%;--w:149.63%" alt="The old master steadies the die on the table">
+            <img src="../assets/img/arches/mint-front.webp" style="--l:-5.85%;--t:-39.16%;--w:149.63%" alt="The old master steadies the die on the table" decoding="async" data-scroll data-scroll-speed="0.2">
           </div>
         </div>
-        <div class="chapter__text" data-dock-target data-scroll data-scroll-offset="25%" data-scroll-repeat data-scroll-speed="0.05">
+        <div class="chapter__text" data-scroll data-scroll-offset="25%" data-scroll-repeat data-scroll-speed="0.05">
           <p class="chapter__lead t-sublead">No blade had ever marked the lion. An apprentice's burin did — and the strike landed a little off centre.</p>
           <p class="chapter__meta t-caption">miletus · c. 350 bce</p>
           <p class="chapter__name script">Alexandros of Miletus</p>
@@ -117,16 +120,16 @@
     <article class="chapter chapter--flip" data-block>
       <h3 class="chapter__word t-display-serif" data-word data-split="chars" data-split-mask="chars" data-scroll data-scroll-offset="10%" data-scroll-repeat>Refused</h3>
       <div class="chapter__grid">
-        <div class="chapter__archwrap" data-scroll data-scroll-offset="25%" data-scroll-repeat>
-          <div class="arch-clip arch-clip--bg reveal-image" data-plate data-scroll data-scroll-offset="25%" data-scroll-repeat>
-            <img src="../assets/img/arches/ferry-bg.webp" style="--l:0%;--t:0%;--w:100%" alt="The crossing at dawn">
+        <div class="chapter__archwrap reveal-image" data-scroll data-scroll-offset="12%" data-scroll-repeat>
+          <div class="arch-clip arch-clip--bg" data-plate>
+            <img src="../assets/img/arches/ferry-bg.webp" style="--l:0%;--t:0%;--w:100%" alt="The crossing at dawn" decoding="async">
           </div>
-          <img class="arch-mid" src="../assets/img/arches/ferry-mid.webp" style="--l:-2.96%;--t:-10.13%;--w:115.73%" alt="The ferryman in his boat offers the coin back" data-scroll data-scroll-speed="-0.05">
+          <img class="arch-mid" src="../assets/img/arches/ferry-mid.webp" style="--l:-2.96%;--t:-10.13%;--w:115.73%" alt="The ferryman in his boat offers the coin back" decoding="async" data-scroll data-scroll-speed="0.12">
           <div class="arch-clip arch-clip--front">
-            <img src="../assets/img/arches/ferry-front.webp" style="--l:-78.24%;--t:19.56%;--w:141.89%" alt="The veiled traveller reaches for the coin">
+            <img src="../assets/img/arches/ferry-front.webp" style="--l:-78.24%;--t:19.56%;--w:141.89%" alt="The veiled traveller reaches for the coin" decoding="async" data-scroll data-scroll-speed="0.2">
           </div>
         </div>
-        <div class="chapter__text" data-dock-target data-scroll data-scroll-offset="25%" data-scroll-repeat data-scroll-speed="0.05">
+        <div class="chapter__text" data-scroll data-scroll-offset="25%" data-scroll-repeat data-scroll-speed="0.05">
           <p class="chapter__lead t-sublead">The ferryman weighs every obol in the dark. Short weight does not cross — it goes back to the shore of the living.</p>
           <p class="chapter__meta t-caption">the crossing · refused</p>
           <p class="chapter__name script">Charon</p>
@@ -135,15 +138,24 @@
     </article>
   </section>
 
-  <!-- the homage, "Return": a spacer drives the scrub; the visuals are fixed
-       siblings (the hero-planes architecture — no pin, the sandwich survives).
-       Phases: the fresco rises full-screen (z 6, the coin already waits hidden
-       behind it) → shrinks into a frame, the giant word surfacing from behind
-       its edges → the two arms part beyond the frame while the ground fades
-       and breaks into two halves → the coin is left face-on over the word,
-       corner captions come in. -->
-  <section class="homage" data-homage aria-label="Return"></section>
-  <div class="homage-word" data-hword aria-hidden="true"><span class="t-display-serif" data-split="chars" data-split-mask="chars">Return</span></div>
+  <!-- the homage, "It came back": a spacer drives the scrub; the visuals are
+       fixed siblings (the hero-planes architecture — no pin, the sandwich
+       survives). Phases: the fresco rises full-screen (z 6, the coin already
+       waits hidden behind it) → shrinks into a frame while the arms part
+       quickly to a finger's breadth, then drift → the arms open further and,
+       with the coin showing between the fingertips, the ground goes through a
+       heavy blur and darkens, breaking in two → the coin is left face-on over
+       the two-line word, the bottom captions come in. -->
+  <section class="homage" data-homage aria-label="It came back"></section>
+  <!-- the word is the hero sandwich again (Dmitriy): line 1 BEHIND the coin
+       (z 4), line 2 OVER it (z 6) — two fixed twins of the same two-line
+       block, each showing one line and carrying the other as an invisible
+       ghost, so both lines sit exactly where one centred block would put them
+       (no transforms, no maths). Both toggle .is-active together. -->
+  <div class="homage-word homage-word--back" data-hword aria-hidden="true">
+    <span class="homage-word__line t-display-serif" data-split="chars" data-split-mask="chars">It came</span>
+    <span class="homage-word__line homage-word__line--ghost t-display-serif" data-split="chars" data-split-mask="chars">back.</span>
+  </div>
   <div class="homage-panel" aria-hidden="true">
     <div class="homage-panel__box">
       <div class="homage-panel__half homage-panel__half--l"><img src="../assets/img/chapters/homage-bg.webp" alt=""></div>
@@ -155,6 +167,10 @@
   <div class="homage-arms" aria-hidden="true">
     <img class="homage-arms__l" src="../assets/img/chapters/homage-arm-l.webp" alt="">
     <img class="homage-arms__r" src="../assets/img/chapters/homage-arm-r.webp" alt="">
+  </div>
+  <div class="homage-word homage-word--front" data-hword aria-hidden="true">
+    <span class="homage-word__line homage-word__line--ghost t-display-serif" data-split="chars" data-split-mask="chars">It came</span>
+    <span class="homage-word__line homage-word__line--2 t-display-serif" data-split="chars" data-split-mask="chars">back.</span>
   </div>
   <div class="homage-caps t-caption" aria-hidden="true">
     <span class="homage-caps__c homage-caps__c--bl">worn smooth against a thumb</span>
