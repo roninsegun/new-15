@@ -88,11 +88,15 @@
     <article class="chapter" data-block>
       <h3 class="chapter__word t-display-serif" data-word data-split="chars" data-split-mask="chars" data-scroll data-scroll-offset="10%" data-scroll-repeat>Struck</h3>
       <div class="chapter__grid">
+        <!-- three honest layers, no duplicated pixels: fon (arch-clipped, z1) ·
+             mid cut-out (unclipped, z2 — breaks the frame, rides the parallax) ·
+             top cut-out (arch-clipped, z3). The coin (z5) rides over them all. -->
         <div class="chapter__archwrap">
           <figure class="chapter__arch reveal-image" data-plate data-scroll data-scroll-offset="25%" data-scroll-repeat>
-            <img src="../assets/img/chapters/mint.webp" alt="A renaissance mint: the apprentice raises the hammer over the die">
+            <img class="arch__fon" src="../assets/img/chapters/mint-fon.webp" alt="The mint workshop">
+            <img class="arch__top arch__top--mint" style="--i: 1" src="../assets/img/chapters/mint-old.webp" alt="The old master steadies the die">
           </figure>
-          <img class="chapter__fig chapter__fig--mint" src="../assets/img/chapters/mint-fig.webp" alt="" data-scroll data-scroll-speed="-0.03">
+          <img class="chapter__mid chapter__mid--mint" src="../assets/img/chapters/mint-boy.webp" alt="The apprentice swings the hammer" data-scroll data-scroll-offset="20%" data-scroll-repeat data-scroll-speed="-0.06">
         </div>
         <div class="chapter__text" data-dock-target data-scroll data-scroll-offset="25%" data-scroll-repeat data-scroll-speed="0.05">
           <p class="chapter__lead t-sublead">No blade had ever marked the lion. An apprentice's burin did — and the strike landed a little off centre.</p>
@@ -107,9 +111,10 @@
       <div class="chapter__grid">
         <div class="chapter__archwrap">
           <figure class="chapter__arch reveal-image" data-plate data-scroll data-scroll-offset="25%" data-scroll-repeat>
-            <img src="../assets/img/chapters/ferry.webp" alt="The ferryman presses the coin back into the traveller's palm">
+            <img class="arch__fon" src="../assets/img/chapters/ferry-fon.webp" alt="The crossing">
+            <img class="arch__top arch__top--ferry" style="--i: 1" src="../assets/img/chapters/ferry-old.webp" alt="The ferryman offers the coin back">
           </figure>
-          <img class="chapter__fig chapter__fig--ferry" src="../assets/img/chapters/ferry-fig.webp" alt="" data-scroll data-scroll-speed="-0.03">
+          <img class="chapter__mid chapter__mid--ferry" src="../assets/img/chapters/ferry-girl.webp" alt="The traveller receives the coin" data-scroll data-scroll-offset="20%" data-scroll-repeat data-scroll-speed="-0.06">
         </div>
         <div class="chapter__text" data-dock-target data-scroll data-scroll-offset="25%" data-scroll-repeat data-scroll-speed="0.05">
           <p class="chapter__lead t-sublead">The ferryman weighs every obol in the dark. Short weight does not cross — it goes back to the shore of the living.</p>
@@ -128,18 +133,20 @@
        and breaks into two halves → the coin is left face-on over the word,
        corner captions come in. -->
   <section class="homage" data-homage aria-label="Return"></section>
-  <div class="homage-word" aria-hidden="true"><span class="t-display-serif">Return</span></div>
+  <div class="homage-word" data-hword aria-hidden="true"><span class="t-display-serif" data-split="chars" data-split-mask="chars">Return</span></div>
   <div class="homage-panel" aria-hidden="true">
     <div class="homage-panel__box">
       <div class="homage-panel__half homage-panel__half--l"><img src="../assets/img/chapters/homage-bg.webp" alt=""></div>
       <div class="homage-panel__half homage-panel__half--r"><img src="../assets/img/chapters/homage-bg.webp" alt=""></div>
-      <img class="homage-panel__arm homage-panel__arm--l" src="../assets/img/chapters/homage-arm-l.webp" alt="">
-      <img class="homage-panel__arm homage-panel__arm--r" src="../assets/img/chapters/homage-arm-r.webp" alt="">
     </div>
   </div>
+  <!-- the arms live OUTSIDE the shrinking box: they hold their full-screen
+       scale while the ground pulls back, then slowly lead away from the coin -->
+  <div class="homage-arms" aria-hidden="true">
+    <img class="homage-arms__l" src="../assets/img/chapters/homage-arm-l.webp" alt="">
+    <img class="homage-arms__r" src="../assets/img/chapters/homage-arm-r.webp" alt="">
+  </div>
   <div class="homage-caps t-caption" aria-hidden="true">
-    <span class="homage-caps__c homage-caps__c--tl">the riverbed · 1,100 years</span>
-    <span class="homage-caps__c homage-caps__c--tr">spring · 1911</span>
     <span class="homage-caps__c homage-caps__c--bl">worn smooth against a thumb</span>
     <span class="homage-caps__c homage-caps__c--br">three letters · unread</span>
   </div>

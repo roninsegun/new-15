@@ -159,8 +159,7 @@ if (!reduced && plates.length) {
   const plateX = (el) => () => {
     if (innerWidth < 768) return 0;
     const r = el.getBoundingClientRect();
-    const centre = innerWidth / 2;
-    return ((r.left + r.right) / 2 < centre ? r.right : r.left) - centre;
+    return (r.left + r.right) / 2 - innerWidth / 2;   /* the ARCH CENTRE (Dmitriy: по центру арки) */
   };
   const FACE = N - 1;                       /* frame 119: face-on, where the hero left it */
   const move = (st, vars, frames) => gsap.timeline({
@@ -180,63 +179,82 @@ if (!reduced && plates.length) {
       [FACE + i * N, FACE + (i + 1) * N],   /* one full turn per move; % N in targetFrame */
     );
   });
+  /* re-centre BEFORE the fresco rises (the homage master starts at 'top 80%') */
   move(
-    { trigger: homage, start: 'top 95%', end: 'top 55%' },
+    { trigger: homage, start: 'top 98%', end: 'top 80%' },
     { from: { x: plateX(plates[plates.length - 1]), scale: CH_SCALE }, to: { x: 0, scale: SCALE_END } },
     [FACE + plates.length * N, FACE + (plates.length + 1) * N],
   );
 
-  /* poster words dock beside their text (Dmitriy: "заголовок уменьшается и
-     подъезжает к тексту"). natRect measures layout with the transform backed
-     out, so invalidateOnRefresh re-aims cleanly mid-scrub. */
-  const natRect = (el) => {
-    const t = el.style.transform;
-    el.style.transform = 'none';
-    const r = el.getBoundingClientRect();
-    el.style.transform = t;
-    return r;
-  };
+  /* the SECOND poster word docks beside its text (the first stays centred —
+     Dmitriy). Alignment is measured on the GLYPHS (first/last char masks),
+     not the full-width centred H3 box, with the word's transform backed out. */
   const DOCK = 0.24;
-  document.querySelectorAll('[data-block]').forEach((block) => {
+  document.querySelectorAll('[data-block].chapter--flip').forEach((block) => {
     const word = block.querySelector('[data-word]');
     const target = block.querySelector('[data-dock-target]');
-    const flip = block.classList.contains('chapter--flip');
-    gsap.set(word, { transformOrigin: flip ? 'left top' : 'right top' });
+    gsap.set(word, { transformOrigin: 'left top' });
+    const rects = () => {
+      const t = word.style.transform;
+      word.style.transform = 'none';
+      const masks = word.querySelectorAll('.char-mask');
+      const g0 = (masks[0] || word).getBoundingClientRect();
+      const w = word.getBoundingClientRect();
+      const tr = target.getBoundingClientRect();
+      word.style.transform = t;
+      return { w, tr, gLeft: g0.left, gTop: g0.top, gH: g0.height };
+    };
     gsap.fromTo(word, { x: 0, y: 0, scale: 1 }, {
       scale: DOCK,
-      x: () => { const w = natRect(word); const t = natRect(target); return flip ? t.left - w.left : t.right - w.right; },
-      y: () => { const w = natRect(word); const t = natRect(target); return t.top - w.top - w.height * DOCK - 20; },
+      /* glyph left lands ON the text's left edge; glyph top sits 20px above it */
+      x: () => { const r = rects(); return r.tr.left - (r.w.left + (r.gLeft - r.w.left) * DOCK); },
+      y: () => { const r = rects(); return (r.tr.top - r.gH * DOCK - 20) - (r.w.top + (r.gTop - r.w.top) * DOCK); },
       ease: 'none',
       scrollTrigger: { trigger: block.querySelector('.chapter__grid'), start: 'top 60%', end: 'top 8%', scrub: true, invalidateOnRefresh: true },
     });
   });
 
-  /* the homage master scrub (fractions of 10 units over the 340vh spacer) */
+  /* ── the homage master scrub (units of 10 over the 380vh spacer) ──
+     rise full-screen (the arms ride along) → hold → the ground shrinks into
+     the frame while the arms HOLD their big scale and slowly lead away from
+     the coin → the halves split and die (blur) → the coin keeps turning
+     through it → the word plays its char reveal (class toggle, free of the
+     scrub) → the two bottom captions. */
   const box = document.querySelector('.homage-panel__box');
   const halves = gsap.utils.toArray('.homage-panel__half');
-  const wordH = document.querySelector('.homage-word');
+  const arms = document.querySelector('.homage-arms');
+  const wordH = document.querySelector('[data-hword]');
   const caps = document.querySelector('.homage-caps');
   const cover = () => 1.04 * Math.max(innerWidth / box.offsetWidth, innerHeight / box.offsetHeight);
   gsap.timeline({
     defaults: { ease: 'none' },
-    scrollTrigger: { trigger: homage, start: 'top bottom', end: 'bottom bottom', scrub: true, invalidateOnRefresh: true },
+    scrollTrigger: {
+      trigger: homage, start: 'top 80%', end: 'bottom bottom', scrub: true, invalidateOnRefresh: true,
+      onUpdate: (self) => {
+        drawFrame(targetFrame());
+        wordH.classList.toggle('is-active', self.progress > 0.66);   /* plays its own 1.6s reveal, replays backwards */
+      },
+    },
   })
-    .fromTo('.homage-panel', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, 0)
-    .fromTo(box, { y: vh(1), scale: cover }, { y: vh(0.07), duration: 2 }, 0)   /* the frame sits a little low: the word's slot is above it */
-    .to({}, { duration: 1 }, 2)                                   /* full-screen hold */
-    .to(box, { scale: 1, duration: 2 }, 3)                        /* the frame */
-    .fromTo(wordH, { autoAlpha: 0, y: vh(0.3) }, { autoAlpha: 1, y: 0, duration: 1.8 }, 3.1)   /* climbs out from behind the panel */
-    .to('.homage-panel__arm--l', { xPercent: -165, rotation: -5, duration: 2.6 }, 5)
-    .to('.homage-panel__arm--r', { xPercent: 165, rotation: 5, duration: 2.6 }, 5)
-    .to(halves[0], { xPercent: -30, autoAlpha: 0, filter: 'blur(2px)', duration: 2 }, 5.8)
-    .to(halves[1], { xPercent: 30, autoAlpha: 0, filter: 'blur(2px)', duration: 2 }, 5.8)
-    .set('.homage-panel', { autoAlpha: 0 }, 8)
-    .fromTo(caps, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.8 }, 7.6)
-    .fromTo('.homage-caps__c', { y: 14, opacity: 0 }, { y: 0, opacity: 0.6, duration: 1.2, stagger: 0.15 }, 7.6)
-    .to({}, { duration: 1 }, 9);                                  /* end-state hold */
+    .fromTo(['.homage-panel', '.homage-arms'], { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.25 }, 0)
+    .fromTo(box, { y: vh(1), scale: cover }, { y: 0, duration: 1.8 }, 0)         /* TRUE full-screen: y 0 at cover scale */
+    .fromTo(arms, { y: vh(1) }, { y: 0, duration: 1.8 }, 0)                      /* the arms arrive with the painting */
+    .to({}, { duration: 0.8 }, 1.8)                                              /* full-screen hold */
+    .to(box, { scale: 1, y: vh(0.07), duration: 1.8 }, 2.6)                      /* the ground pulls back into the frame */
+    .to('.homage-arms__l', { x: () => -innerWidth * 0.58, duration: 3.4 }, 3)    /* the arms stay BIG and slowly lead away */
+    .to('.homage-arms__r', { x: () => innerWidth * 0.58, duration: 3.4 }, 3)
+    .fromTo(state, { frame: FACE + 3 * N }, { frame: FACE + 4 * N, duration: 3.6, immediateRender: false }, 3)   /* the coin turns through the reveal */
+    .to(halves[0], { xPercent: -30, autoAlpha: 0, filter: 'blur(2px)', duration: 1.6 }, 4.6)
+    .to(halves[1], { xPercent: 30, autoAlpha: 0, filter: 'blur(2px)', duration: 1.6 }, 4.6)
+    .to(arms, { autoAlpha: 0, duration: 0.8 }, 5.9)                              /* руки исчезли */
+    .set('.homage-panel', { autoAlpha: 0 }, 6.4)
+    .fromTo(caps, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, 7.2)
+    .fromTo('.homage-caps__c', { y: 14, opacity: 0 }, { y: 0, opacity: 0.6, duration: 1, stagger: 0.2 }, 7.2)
+    .to({}, { duration: 1 }, 9);                                                 /* end-state hold */
 } else if (reduced) {
   /* the end-state poster, no phases */
-  gsap.set(['.homage-word', '.homage-caps'], { autoAlpha: 1 });
+  document.querySelector('[data-hword]').classList.add('is-active');
+  gsap.set('.homage-caps', { autoAlpha: 1 });
   gsap.set('.homage-caps__c', { opacity: 0.6 });
 }
 

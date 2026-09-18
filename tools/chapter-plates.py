@@ -1,12 +1,10 @@
-"""Mosaic 2.0 assets: assets/src/chapters → assets/img/chapters (webp).
-Bright renaissance direction (Dmitriy): no darkening, near-full saturation —
-the paintings should glow against the black. Opaque plates and alpha layers:
-- mint / ferry: the two arch paintings (3:4)
-- homage-bg: the armless fresco (16:9)
-- mint-fig / ferry-fig: overflow cut-outs — SAME canvas as their source crop,
-  never trimmed (CSS registers them over the arch by canvas fractions)
-- homage-arm-l/r: the two arms, trimmed to their alpha bbox (+8px)
-Re-run after swapping any source."""
+"""Mosaic 2.0 assets (honest layers) + the homage → assets/img/chapters/*.webp.
+Bright renaissance direction: near-full saturation, no darkening.
+- *-fon: opaque arch backgrounds (downscaled to 1200x1600)
+- *-old / *-boy / *-girl: alpha cut-outs (removebg), trimmed to bbox+8px,
+  capped at 1600px on the long side
+- homage-bg / homage-arm-l / homage-arm-r: as before
+Re-run after swapping any source in assets/src/chapters."""
 import os
 from PIL import Image, ImageEnhance
 
@@ -16,32 +14,51 @@ OUT = os.path.join(ROOT, 'assets', 'img', 'chapters')
 SAT = 0.95
 
 def grade(im):
-    rgb = ImageEnhance.Color(im.convert('RGB')).enhance(SAT)
-    return rgb
+    return ImageEnhance.Color(im.convert('RGB')).enhance(SAT)
 
-def plate(src, dst):
+def report(dst):
+    p = os.path.join(OUT, dst)
+    print(f'{dst:20s} {Image.open(p).size}  {os.path.getsize(p) // 1024} KB')
+
+def plate(src, dst, size=(1200, 1600)):
     im = Image.open(os.path.join(SRC, src))
+    im.thumbnail((size[0], size[1]), Image.LANCZOS)
     grade(im).save(os.path.join(OUT, dst), 'WEBP', quality=88, method=6)
     report(dst)
 
-def layer(src, dst, trim=False):
+def layer(src, dst, cap=1600, crop=None, erase=()):
+    """crop: fractional (x0, y0, x1, y1) cut BEFORE the bbox trim; erase:
+    fractional rects (of the TRIMMED canvas) whose alpha is zeroed — both kill
+    the half-erased neighbour figures the generator leaves at a group's edge
+    (any seam hides under the adjacent layer in the arch)."""
     im = Image.open(os.path.join(SRC, src)).convert('RGBA')
-    if trim:
-        x0, y0, x1, y1 = im.getchannel('A').getbbox()
+    if crop:
+        W, H = im.size
+        im = im.crop((int(crop[0] * W), int(crop[1] * H), int(crop[2] * W), int(crop[3] * H)))
+    bbox = im.getchannel('A').getbbox()
+    if bbox:
+        x0, y0, x1, y1 = bbox
         im = im.crop((max(0, x0 - 8), max(0, y0 - 8), min(im.width, x1 + 8), min(im.height, y1 + 8)))
+    if erase:
+        from PIL import ImageDraw
+        a = im.getchannel('A')
+        d = ImageDraw.Draw(a)
+        W, H = im.size
+        for (ex0, ey0, ex1, ey1) in erase:
+            d.rectangle((int(ex0 * W), int(ey0 * H), int(ex1 * W), int(ey1 * H)), fill=0)
+        im.putalpha(a)
+    im.thumbnail((cap, cap), Image.LANCZOS)
     rgb = grade(im)
     rgb.putalpha(im.getchannel('A'))
     rgb.save(os.path.join(OUT, dst), 'WEBP', quality=92, method=6)
     report(dst)
 
-def report(dst):
-    p = os.path.join(OUT, dst)
-    print(f'{dst:18s} {Image.open(p).size}  {os.path.getsize(p) // 1024} KB')
-
-plate('cand-a1.png', 'mint.webp')
-plate('cand-b2.png', 'ferry.webp')
-plate('homage-bg.png', 'homage-bg.webp')
-layer('cut-mint-fig.png', 'mint-fig.webp')
-layer('cut-ferry-fig.png', 'ferry-fig.webp')
-layer('cut-arm-l.png', 'homage-arm-l.webp', trim=True)
-layer('cut-arm-r.png', 'homage-arm-r.webp', trim=True)
+plate('layer-a-fon.png', 'mint-fon.webp')
+layer('cut-a-old.png', 'mint-old.webp', crop=(0.36, 0.10, 1, 1), erase=((0, 0, 0.42, 0.44), (0, 0.86, 0.14, 1)))
+layer('cut-a-boy.png', 'mint-boy.webp', crop=(0, 0, 0.63, 1), erase=((0.72, 0, 1, 0.62), (0.74, 0.4, 1, 0.95), (0.86, 0, 1, 1)))
+plate('layer-b-sea.png', 'ferry-fon.webp')
+layer('cut-b-ferry.png', 'ferry-old.webp', crop=(0, 0, 0.74, 1), erase=((0.82, 0, 1, 0.6), (0.86, 0, 1, 0.14)))
+layer('cut-b-girl.png', 'ferry-girl.webp', crop=(0.30, 0, 1, 1), erase=((0, 0, 0.28, 0.42), (0.4, 0, 0.8, 0.05)))
+plate('homage-bg.png', 'homage-bg.webp', size=(1344, 752))
+layer('cut-arm-l.png', 'homage-arm-l.webp')
+layer('cut-arm-r.png', 'homage-arm-r.webp')
