@@ -290,33 +290,31 @@ body {
 .chapter--flip .chapter__grid { grid-template-columns: 1fr minmax(0, 38vw); }
 .chapter--flip .chapter__archwrap { order: 2; }
 .chapter--flip .chapter__text { order: 1; justify-self: end; }
-.chapter__archwrap { position: relative; }   /* the figure registers against this box; NO transform here */
-.chapter__arch {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 3 / 4;
-  margin: 0;
-  border-radius: 50% 50% 0 0 / 38% 38% 0 0;   /* the icon arch */
+/* ── the icon: one master canvas, three registered layers, two clips ──
+   The wrapper IS the painting's canvas (9:16). Every layer is the full
+   canvas (position:absolute; inset:0) — no per-layer placement, they
+   register because they were cut from one master. The arch is a 3:4 window
+   anchored to the canvas bottom; the strip above it exists only for the
+   breakout. Two IDENTICAL clip boxes carry the bg (z1) and the front group
+   (z3); the breakout layer (z2) is their unclipped sibling in between —
+   the sandwich. overflow clipping is not stacking, so the coin (fixed z5)
+   still rides over all three. No transforms on any of these boxes. */
+.chapter__archwrap { position: relative; aspect-ratio: 9 / 16; margin-top: calc(-100% * 4 / 9); }   /* the canvas's breakout strip (16/9 − 4/3 = 4/9 of the width) hangs above the grid row: the row aligns on the ARCH */
+.arch-clip {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: calc(100% * 4 / 3 * 9 / 16);          /* the 3:4 window: 75 % of the 9:16 canvas */
+  overflow: hidden;
+  border-radius: 50% 50% 0 0 / 37.5% 37.5% 0 0;   /* semicircle: r = w/2 = 37.5 % of a 3:4 box */
 }
-/* three honest layers — no duplicated pixels, so the parallax cannot break
-   the picture. fon (z1) and top (z3) live inside the arch and are clipped by
-   it; the mid cut-out (z2) is a sibling OUTSIDE the clip and overflows the
-   frame. Interleaving works because nothing here creates a stacking context
-   above them: overflow clipping is not stacking. The coin (z5) rides over
-   the whole arch. */
-.arch__fon { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-.arch__top { position: absolute; z-index: 3; }
-.chapter__mid { position: absolute; z-index: 2; pointer-events: none; }
-/* placements (fractions of the arch box; tuned against the baked layers) */
-.arch__top--mint  { right: -4%; bottom: 0; width: 80%; }
-.arch__top--ferry { left: -6%; bottom: 0; width: 74%; }
-/* widths chosen so each figure's bottom lands flush with the arch bottom
-   (height = width × imgAspect × 3/4): no straight cut hanging on the black */
-.chapter__mid--mint  { left: -12%; top: -15%; width: 69%; }
-.chapter__mid--ferry { right: -10%; top: -11%; width: 77%; }
-/* mid reveal: simple fade once in view (its transform belongs to Locomotive's speed) */
-.chapter__mid { opacity: 0; transition: opacity .9s var(--ease-quart) .45s; }
-.chapter__mid.is-inview { opacity: 1; }
+.arch-clip--bg { z-index: 1; }
+.arch-clip--front { z-index: 3; }
+.arch-clip img { position: absolute; left: 0; bottom: 0; width: 100%; height: auto; display: block; }   /* the full canvas, bottom-registered */
+.arch-mid { position: absolute; inset: 0; width: 100%; height: auto; z-index: 2; pointer-events: none; }
+/* reveals: the bg clip plays the A5 mask; the mid and front fade in behind it */
+.arch-clip--front img, .arch-mid { opacity: 0; transition: opacity .9s var(--ease-quart); }
+.chapter__archwrap.is-inview .arch-mid { opacity: 1; transition-delay: .5s; }
+.chapter__archwrap.is-inview .arch-clip--front img { opacity: 1; transition-delay: .35s; }
+/* the coin's anchor: the arch centre (main.js reads [data-plate] = .arch-clip--bg) */
 .chapter__text { max-width: 30rem; position: relative; z-index: 2; }
 .chapter__lead { }
 .chapter__meta { margin-top: 2em; letter-spacing: .04em; opacity: .55; }   /* lowercase — no caps in captions */

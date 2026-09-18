@@ -144,47 +144,74 @@ if (reduced) {
 }
 
 /* ── mosaic 2.0 + the homage ──
-   Coin: two fromTo triggers walk it to each arch's inner edge with one full
-   turn per move, then a third brings it to centre as the homage spacer
-   arrives — where the fresco panel (z 6) covers it. Words: each block's
-   poster word, once revealed, scrubs down in scale and docks beside its text
-   column. Homage: one master scrub over the spacer — the panel rises
-   full-screen, shrinks into a frame (the giant word surfacing behind it),
-   the arms part beyond the frame, the ground fades and splits in two, and
-   the coin is left face-on over the word with the corner captions in. */
-const CH_SCALE = 0.46;
+   The coin, from the chapters on (Dmitriy): ONE master timeline over the
+   whole range (chapters' arrival → end of the homage), 1 unit = 1px of
+   scroll, rebuilt from fresh rects on every ScrollTrigger refresh — so no
+   two tweens ever fight over x/scale and a resize cannot strand it at a
+   stale anchor. Inside it: the frames turn continuously and linearly
+   (landing face-on: a whole number of turns); every move to an arch centre
+   rides power2.inOut with a slight lift (Emil: on-screen movement is
+   ease-in-out, never linear), shrinking to half over the arch and back to
+   full as the arch's bottom passes the coin; then to centre before the
+   fresco rises. scrub .8 lets the coin catch up to the scroll with a little
+   inertia instead of jerking at it. Words: the second block's poster word
+   docks beside its text. Homage: one master scrub over the spacer. */
+const ARCH_SCALE = SCALE_END * 0.5;       /* −50 % over an arch */
+const TURN_VH = 1.5;                      /* one full turn per 1.5 viewport heights of scroll */
+const LIFT_VH = 0.04;                     /* the arc of a move: up 4vh at its middle */
 const plates = gsap.utils.toArray('[data-plate]');
+const chapters = document.querySelector('[data-chapters]');
 const homage = document.querySelector('[data-homage]');
+let walk = null;
 if (!reduced && plates.length) {
-  const plateX = (el) => () => {
+  const FACE = N - 1;                       /* frame 119: face-on, where the hero left it */
+  const docTop = (el) => el.getBoundingClientRect().top + scrollY;
+  const centreX = (el) => {
     if (innerWidth < 768) return 0;
     const r = el.getBoundingClientRect();
-    return (r.left + r.right) / 2 - innerWidth / 2;   /* the ARCH CENTRE (Dmitriy: по центру арки) */
+    return (r.left + r.right) / 2 - innerWidth / 2;   /* the ARCH CENTRE */
   };
-  const FACE = N - 1;                       /* frame 119: face-on, where the hero left it */
-  const move = (st, vars, frames) => gsap.timeline({
-    defaults: { ease: 'none' },
-    scrollTrigger: { scrub: true, invalidateOnRefresh: true, ...st },
-    onUpdate: () => drawFrame(targetFrame()),
-  })
-    .fromTo(state, { frame: frames[0] }, { frame: frames[1], immediateRender: false }, 0)
-    .fromTo(canvas, vars.from, { ...vars.to, immediateRender: false }, 0);
-  plates.forEach((plate, i) => {
-    move(
-      { trigger: plate.closest('.chapter__archwrap'), start: 'top 92%', end: 'top 45%' },
-      {
-        from: { x: i === 0 ? 0 : plateX(plates[i - 1]), scale: i === 0 ? SCALE_END : CH_SCALE },
-        to: { x: plateX(plate), scale: CH_SCALE },
-      },
-      [FACE + i * N, FACE + (i + 1) * N],   /* one full turn per move; % N in targetFrame */
-    );
-  });
-  /* re-centre BEFORE the fresco rises (the homage master starts at 'top 80%') */
-  move(
-    { trigger: homage, start: 'top 98%', end: 'top 80%' },
-    { from: { x: plateX(plates[plates.length - 1]), scale: CH_SCALE }, to: { x: 0, scale: SCALE_END } },
-    [FACE + plates.length * N, FACE + (plates.length + 1) * N],
-  );
+  const buildWalk = () => {
+    if (walk) { walk.scrollTrigger && walk.scrollTrigger.kill(); walk.kill(); }
+    const vh = innerHeight;
+    const S0 = docTop(chapters) - 0.8 * vh;
+    const S1 = docTop(homage) + homage.offsetHeight - vh;
+    const D = S1 - S0;
+    const at = (docY, frac) => docY - frac * vh - S0;   /* timeline time of "docY at viewport fraction frac" */
+    const turns = Math.max(1, Math.round(D / (vh * TURN_VH)));
+    walk = gsap.timeline({
+      defaults: { ease: 'none', immediateRender: false },
+      scrollTrigger: { start: S0, end: S1, scrub: 0.8, onUpdate: () => drawFrame(targetFrame()) },
+    });
+    walk.fromTo(state, { frame: FACE }, { frame: FACE + turns * N, duration: D }, 0);
+    const move = (t0, t1, x0, x1) => {
+      const d = t1 - t0;
+      walk.fromTo(canvas, { x: x0 }, { x: x1, duration: d, ease: 'power2.inOut' }, t0)
+        .fromTo(canvas, { y: 0 }, { y: -LIFT_VH * vh, duration: d / 2, ease: 'sine.out' }, t0)
+        .fromTo(canvas, { y: -LIFT_VH * vh }, { y: 0, duration: d / 2, ease: 'sine.in' }, t0 + d / 2);
+    };
+    let x = 0;
+    plates.forEach((plate) => {
+      const wrap = plate.closest('.chapter__archwrap');
+      const wt = docTop(wrap);
+      const wb = wt + wrap.offsetHeight;
+      const cx = centreX(plate);
+      /* approach: to the arch centre, shrinking — starts after the previous arch's leave */
+      const a0 = at(wt, 0.45); const a1 = at(wt, 0.08);
+      move(a0, a1, x, cx);
+      walk.fromTo(canvas, { scale: SCALE_END }, { scale: ARCH_SCALE, duration: a1 - a0, ease: 'power2.inOut' }, a0);
+      /* leave: the arch's bottom passes the coin (viewport centre) — back to full */
+      const l0 = at(wb, 0.62); const l1 = at(wb, 0.42);
+      walk.fromTo(canvas, { scale: ARCH_SCALE }, { scale: SCALE_END, duration: l1 - l0, ease: 'power2.inOut' }, l0);
+      x = cx;
+    });
+    /* re-centre BEFORE the fresco rises (the homage master starts at 'top 80%') */
+    const ht = docTop(homage);
+    move(at(ht, 0.98), at(ht, 0.8), x, 0);
+    walk.scrollTrigger.update();
+  };
+  buildWalk();
+  ScrollTrigger.addEventListener('refreshInit', buildWalk);
 
   /* the SECOND poster word docks beside its text (the first stays centred —
      Dmitriy). Alignment is measured on the GLYPHS (first/last char masks),
@@ -231,7 +258,6 @@ if (!reduced && plates.length) {
     scrollTrigger: {
       trigger: homage, start: 'top 80%', end: 'bottom bottom', scrub: true, invalidateOnRefresh: true,
       onUpdate: (self) => {
-        drawFrame(targetFrame());
         wordH.classList.toggle('is-active', self.progress > 0.66);   /* plays its own 1.6s reveal, replays backwards */
       },
     },
@@ -243,7 +269,6 @@ if (!reduced && plates.length) {
     .to(box, { scale: 1, y: vh(0.07), duration: 1.8 }, 2.6)                      /* the ground pulls back into the frame */
     .to('.homage-arms__l', { x: () => -innerWidth * 0.58, duration: 3.4 }, 3)    /* the arms stay BIG and slowly lead away */
     .to('.homage-arms__r', { x: () => innerWidth * 0.58, duration: 3.4 }, 3)
-    .fromTo(state, { frame: FACE + 3 * N }, { frame: FACE + 4 * N, duration: 3.6, immediateRender: false }, 3)   /* the coin turns through the reveal */
     .to(halves[0], { xPercent: -30, autoAlpha: 0, filter: 'blur(2px)', duration: 1.6 }, 4.6)
     .to(halves[1], { xPercent: 30, autoAlpha: 0, filter: 'blur(2px)', duration: 1.6 }, 4.6)
     .to(arms, { autoAlpha: 0, duration: 0.8 }, 5.9)                              /* руки исчезли */
@@ -298,6 +323,7 @@ window.__test = {
   get current() { return current; },
   get scale() { return gsap.getProperty(canvas, 'scale'); },
   planes: { back, mid, frontL, frontR }, glow,
+  get walk() { return walk; },
   get scroll() { return getScroll(); },   /* Lenis owns the scroll: drive it through here, not window.scrollTo */
   base: BASE,
 };
