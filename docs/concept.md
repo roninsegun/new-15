@@ -76,7 +76,7 @@
   монета. Сильнее по «мускулу», но уход планов не несёт сюжета так прямо, как
   отчаливающая лодка.
 
-Стиль (общий для A/B), черновик промпта на этап B:
+Стиль — **пересмотрен**: хиро перерисован в той же фреске, что арки (светлый ренессанс, штукатурка, кракелюр), поздние сумерки вместо ночи; мастер `assets/src/hero2/master-v1.png` (Nano Banana Pro, композиция A + контраст B, пассажирка убрана), планы — `tools/hero-layers.py`. Ниже — исходный черновик промпта (тенебризм), исторический:
 
 > oil on canvas, Spanish baroque tenebrism (Zurbarán, Ribera, Subleyras),
 > one warm light source at the exact centre of the frame, deep black shadows,
