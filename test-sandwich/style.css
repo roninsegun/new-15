@@ -196,8 +196,8 @@ body {
 .plane--back img {
   transform: scale(1.2);
   /* Dmitriy: black at the very top, the far bank surfacing towards the bottom */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.35) 40%, #000 78%);
-  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.35) 40%, #000 78%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.25) 30%, #000 62%);
+  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.25) 30%, #000 62%);
 }
 .plane--mid   { z-index: 3; }
 .plane--front { z-index: 7; }

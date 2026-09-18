@@ -35,7 +35,7 @@ const TURN_END = 1.5;     // frames 0→119 finish here
 const SCALE_MID = 0.6;    // at 1vh
 const SCALE_END = 0.5;    // at 1.5vh, then frozen
 const TINT = null;        // copper grade multiplied over every frame: '#ff9c55' (the painting's copper lifted ×1.15) — off, Dmitriy: "как печенька"
-const BACK_OPACITY = 0.7; // the far bank at rest — it recedes (Dmitriy tried .1: too little)
+const BACK_OPACITY = 1;   // the far bank at rest: its darkness now lives in the bake + the top fade mask
 
 const canvas = document.getElementById('coin');
 const ctx = canvas.getContext('2d');
